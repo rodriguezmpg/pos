@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #d1d5db;
+            --accent: #2563eb;
+            --green: #16a34a;
+            --red: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        /* Layout de las 3 secciones superiores */
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Tablas generales */
+        table.tablafija {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table.tablafija th,
+        table.tablafija td {
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            text-align: right;
+        }
+
+        table.tablafija th:first-child,
+        table.tablafija td:first-child {
+            text-align: left;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        table.tablafija thead th {
+            background: #f3f4f6;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        table.tablafija thead th:first-child {
+            text-align: left;
+        }
+
+        /* Tabla CSV de movimientos */
+        .tabla-csv-container {
+            overflow-x: auto;
+        }
+
+        table.tabla-csv {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table.tabla-csv th,
+        table.tabla-csv td {
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            text-align: right;
+        }
+
+        table.tabla-csv th:first-child,
+        table.tabla-csv td:first-child {
+            text-align: left;
+        }
+
+        table.tabla-csv thead th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
+        table.tabla-csv .green-bg {
+            background: #dcfce7;
+        }
+
+        table.tabla-csv .blue-bg {
+            background: #dbeafe;
+        }
+
+        table.tabla-csv .restart-row td {
+            text-align: center;
+            font-weight: bold;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Tabla de niveles unificada */
+        #tabla-niveles-container {
+            overflow-x: auto;
+        }
+
+        #tabla-niveles-container table.tablafija thead th {
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        /* Stats inline */
+        .stat-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            gap: 6px;
+            align-items: baseline;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+
+        @media (max-width: 1000px) {
+            .top-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="page-title" id="titulo"></div>
+
+    <!-- FILA SUPERIOR: Info + Short/Long + Contabilidad -->
+    <div class="top-grid">
+
+        <!-- COL 1: Info general + Parámetros -->
+        <div>
+            <div class="card">
+                <div class="card-title">Información general</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr>
+                            <td>P. Actual</td>
+                            <td><span class="current_price"></span></td>
+                            <td>Contador</td>
+                            <td><span class="contador"></span></td>
+                        </tr>
+                        <tr>
+                            <td>PE</td>
+                            <td><span class="precio_banda"></span></td>
+                            <td>Niveles</td>
+                            <td><span class="input_niveles"></span></td>
+                        </tr>
+                        <tr>
+                            <td>% SL</td>
+                            <td><span class="percentsl"></span></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Parámetros fijos</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr><td>fds_Po1</td><td><span class="fds_Po1_valor"></span></td><td>fdl_Po1</td><td><span class="fdl_Po1_valor"></span></td></tr>
+                        <tr><td>fds_step1</td><td><span class="fds_step1_valor"></span></td><td>fdl_step1</td><td><span class="fdl_step1_valor"></span></td></tr>
+                        <tr><td>fds_Po2</td><td><span class="fds_Po2_valor"></span></td><td>fdl_Po2</td><td><span class="fdl_Po2_valor"></span></td></tr>
+                        <tr><td>fds_step2</td><td><span class="fds_step2_valor"></span></td><td>fdl_step2</td><td><span class="fdl_step2_valor"></span></td></tr>
+                        <tr><td>fds_Po3</td><td><span class="fds_Po3_valor"></span></td><td>fdl_Po3</td><td><span class="fdl_Po3_valor"></span></td></tr>
+                        <tr><td>fds_step3</td><td><span class="fds_step3_valor"></span></td><td>fdl_step3</td><td><span class="fdl_step3_valor"></span></td></tr>
+                        <tr><td>fds_Po4</td><td><span class="fds_Po4_valor"></span></td><td>fdl_Po4</td><td><span class="fdl_Po4_valor"></span></td></tr>
+                        <tr><td>fds_step4</td><td><span class="fds_step4_valor"></span></td><td>fdl_step4</td><td><span class="fdl_step4_valor"></span></td></tr>
+                        <tr><td>fds_Po5</td><td><span class="fds_Po5_valor"></span></td><td>fdl_Po5</td><td><span class="fdl_Po5_valor"></span></td></tr>
+                        <tr><td>fds_step5</td><td><span class="fds_step5_valor"></span></td><td>fdl_step5</td><td><span class="fdl_step5_valor"></span></td></tr>
+                        <tr><td>Lim Inf</td><td><span class="limite_inferior"></span></td><td>Lim Sup</td><td><span class="limite_superior"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COL 2: Short + Long -->
+        <div>
+            <div class="card">
+                <div class="card-title">Short</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr><td></td><td>Recorrido %</td><td>TP esperado</td><td>Qty USDT</td><td>Qty Var</td></tr>
+                        <tr><td>Po1</td><td><span class="fds_recorrido_perc1"></span></td><td><span class="fds_PF_esperado1"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar1"></span></td></tr>
+                        <tr><td>Po2</td><td><span class="fds_recorrido_perc2"></span></td><td><span class="fds_PF_esperado2"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar2"></span></td></tr>
+                        <tr><td>Po3</td><td><span class="fds_recorrido_perc3"></span></td><td><span class="fds_PF_esperado3"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar3"></span></td></tr>
+                        <tr><td>Po4</td><td><span class="fds_recorrido_perc4"></span></td><td><span class="fds_PF_esperado4"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar4"></span></td></tr>
+                        <tr><td>Po5</td><td><span class="fds_recorrido_perc5"></span></td><td><span class="fds_PF_esperado5"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar5"></span></td></tr>
+                        <tr><td></td><td><span class="fds_sum_recorrrido_perc"></span></td><td><span class="fds_sum_PF_esperado"></span></td><td><span class="fds_sum_Qty_USDT_SubPosicion"></span></td><td><span class="fds_sum_Qty_mVar"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Long</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr><td></td><td>Recorrido %</td><td>TP esperado</td><td>Qty USDT</td><td>Qty Var</td></tr>
+                        <tr><td>Po1</td><td><span class="fdl_recorrido_perc1"></span></td><td><span class="fdl_PF_esperado1"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar1"></span></td></tr>
+                        <tr><td>Po2</td><td><span class="fdl_recorrido_perc2"></span></td><td><span class="fdl_PF_esperado2"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar2"></span></td></tr>
+                        <tr><td>Po3</td><td><span class="fdl_recorrido_perc3"></span></td><td><span class="fdl_PF_esperado3"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar3"></span></td></tr>
+                        <tr><td>Po4</td><td><span class="fdl_recorrido_perc4"></span></td><td><span class="fdl_PF_esperado4"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar4"></span></td></tr>
+                        <tr><td>Po5</td><td><span class="fdl_recorrido_perc5"></span></td><td><span class="fdl_PF_esperado5"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar5"></span></td></tr>
+                        <tr><td></td><td><span class="fdl_sum_recorrrido_perc"></span></td><td><span class="fdl_sum_PF_esperado"></span></td><td><span class="fdl_sum_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_sum_Qty_mVar"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COL 3: Contabilidad -->
+        <div>
+            <div class="card">
+                <div class="card-title">Contabilidad</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr><td>Balance Actual</td><td><span class="sd_Bal_Pos"></span></td><td>PF</td><td><span class="ps_input_pf"></span></td></tr>
+                        <tr><td>Valor Puro Tot</td><td><span class="sd_ValorPuro_Tot"></span></td><td>Qty min</td><td><span class="ps_Qty_min"></span></td></tr>
+                        <tr><td>Perd Max</td><td><span class="sd_perd_esperada"></span></td><td>F. Inicio</td><td><span class="sd_fechainicio"></span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLA UNIFICADA DE NIVELES -->
+    <div class="card">
+        <div class="card-title">Niveles</div>
+        <div id="tabla-niveles-container"></div>
+    </div>
+
+    <!-- TABLA CSV MOVIMIENTOS -->
+    <div class="card">
+        <div class="card-title">Movimientos</div>
+        <div class="tabla-csv-container">
+            <table class="tabla-csv" id="tablaCsv"></table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    const ticker = (new URLSearchParams(window.location.search)).get('ticker') || 'ethusdt';
+    document.getElementById("titulo").textContent = ticker.toUpperCase();
+    document.title = ticker.toUpperCase();
+
+    function cargarDatosEstaticos() {
+        $.getJSON(`/dat_fixed?ticker=${ticker}`, function(data) {
+
+            $('.limite_inferior').text(data.limite_inferior); 
+            $('.limite_superior').text(data.limite_superior); 
+            $('.sd_fechainicio').text(data.sd_fechainicio);
+            $('.ps_input_pf').text(data.ps_input_pf);
+            $('.sd_perd_esperada').text(data.sd_perd_esperada);
+            $('.ps_Qty_min').text(data.ps_Qty_min);
+
+            $('.fds_Po1_valor').text(data.fds_Po1_valor);    
+            $('.fds_Po2_valor').text(data.fds_Po2_valor);
+            $('.fds_Po3_valor').text(data.fds_Po3_valor);
+            $('.fds_Po4_valor').text(data.fds_Po4_valor);
+            $('.fds_Po5_valor').text(data.fds_Po5_valor);  
+
+            $('.fdl_Po1_valor').text(data.fdl_Po1_valor);       
+            $('.fdl_Po2_valor').text(data.fdl_Po2_valor);  
+            $('.fdl_Po3_valor').text(data.fdl_Po3_valor);  
+            $('.fdl_Po4_valor').text(data.fdl_Po4_valor);  
+            $('.fdl_Po5_valor').text(data.fdl_Po5_valor);  
+
+            $('.fds_step1_valor').text(data.fds_step1_valor);  
+            $('.fds_step2_valor').text(data.fds_step2_valor);   
+            $('.fds_step3_valor').text(data.fds_step3_valor);   
+            $('.fds_step4_valor').text(data.fds_step4_valor);   
+            $('.fds_step5_valor').text(data.fds_step5_valor);   
+
+            $('.fdl_step1_valor').text(data.fdl_step1_valor);  
+            $('.fdl_step2_valor').text(data.fdl_step2_valor);   
+            $('.fdl_step3_valor').text(data.fdl_step3_valor);   
+            $('.fdl_step4_valor').text(data.fdl_step4_valor);   
+            $('.fdl_step5_valor').text(data.fdl_step5_valor);   
+
+            $('.input_niveles').text(data.input_niveles);
+            $('.percentsl').text(data.percentsl);
+
+            $('.fds_recorrido_perc1').text(data.fds_recorrido_perc1);
+            $('.fds_recorrido_perc2').text(data.fds_recorrido_perc2);
+            $('.fds_recorrido_perc3').text(data.fds_recorrido_perc3);
+            $('.fds_recorrido_perc4').text(data.fds_recorrido_perc4);
+            $('.fds_recorrido_perc5').text(data.fds_recorrido_perc5);
+            $('.fds_sum_recorrrido_perc').text(data.fds_sum_recorrrido_perc);
+
+            $('.fdl_recorrido_perc1').text(data.fdl_recorrido_perc1);
+            $('.fdl_recorrido_perc2').text(data.fdl_recorrido_perc2);
+            $('.fdl_recorrido_perc3').text(data.fdl_recorrido_perc3);
+            $('.fdl_recorrido_perc4').text(data.fdl_recorrido_perc4);
+            $('.fdl_recorrido_perc5').text(data.fdl_recorrido_perc5);
+            $('.fdl_sum_recorrrido_perc').text(data.fdl_sum_recorrrido_perc);
+
+            $('.Qty_PosicionTotal').text(data.Qty_PosicionTotal);
+
+            $('.fds_PF_esperado1').text(data.fds_PF_esperado1);
+            $('.fds_PF_esperado2').text(data.fds_PF_esperado2);
+            $('.fds_PF_esperado3').text(data.fds_PF_esperado3);
+            $('.fds_PF_esperado4').text(data.fds_PF_esperado4);
+            $('.fds_PF_esperado5').text(data.fds_PF_esperado5);
+            $('.fds_sum_PF_esperado').text(data.fds_sum_PF_esperado);
+
+            $('.fds_Qty_USDT_SubPosicion').text(data.fds_Qty_USDT_SubPosicion);
+            $('.fds_sum_Qty_USDT_SubPosicion').text(data.fds_sum_Qty_USDT_SubPosicion);
+
+            $('.fdl_PF_esperado1').text(data.fdl_PF_esperado1);
+            $('.fdl_PF_esperado2').text(data.fdl_PF_esperado2);
+            $('.fdl_PF_esperado3').text(data.fdl_PF_esperado3);
+            $('.fdl_PF_esperado4').text(data.fdl_PF_esperado4);
+            $('.fdl_PF_esperado5').text(data.fdl_PF_esperado5);
+            $('.fdl_sum_PF_esperado').text(data.fdl_sum_PF_esperado);
+            
+            $('.fdl_Qty_USDT_SubPosicion').text(data.fdl_Qty_USDT_SubPosicion);
+            $('.fdl_sum_Qty_USDT_SubPosicion').text(data.fdl_sum_Qty_USDT_SubPosicion);
+
+            $('.fds_Qty_mVar1').text(data.fds_Qty_mVar1);
+            $('.fds_Qty_mVar2').text(data.fds_Qty_mVar2);
+            $('.fds_Qty_mVar3').text(data.fds_Qty_mVar3);
+            $('.fds_Qty_mVar4').text(data.fds_Qty_mVar4);
+            $('.fds_Qty_mVar5').text(data.fds_Qty_mVar5);
+            $('.fds_sum_Qty_mVar').text(data.fds_sum_Qty_mVar);
+
+            $('.fdl_Qty_mVar1').text(data.fdl_Qty_mVar1);
+            $('.fdl_Qty_mVar2').text(data.fdl_Qty_mVar2);
+            $('.fdl_Qty_mVar3').text(data.fdl_Qty_mVar3);
+            $('.fdl_Qty_mVar4').text(data.fdl_Qty_mVar4);
+            $('.fdl_Qty_mVar5').text(data.fdl_Qty_mVar5);
+            $('.fdl_sum_Qty_mVar').text(data.fdl_sum_Qty_mVar);
+
+            $('.fds_perc_SubSL1').text(data.fds_perc_SubSL1);
+            $('.fds_perc_SubSL2').text(data.fds_perc_SubSL2);
+            $('.fds_perc_SubSL3').text(data.fds_perc_SubSL3);
+            $('.fds_perc_SubSL4').text(data.fds_perc_SubSL4);
+            $('.fds_perc_SubSL5').text(data.fds_perc_SubSL5);
+
+            $('.fdl_perc_SubSL1').text(data.fdl_perc_SubSL1);
+            $('.fdl_perc_SubSL2').text(data.fdl_perc_SubSL2);
+            $('.fdl_perc_SubSL3').text(data.fdl_perc_SubSL3);
+            $('.fdl_perc_SubSL4').text(data.fdl_perc_SubSL4);
+            $('.fdl_perc_SubSL5').text(data.fdl_perc_SubSL5);
+
+        });
+    }
+    $(document).ready(function() {
+        cargarDatosEstaticos();
+    });
+
+    function actualizarPrecio() {           
+        $.getJSON(`/precio?ticker=${ticker}`, function(data) {
+            $('.current_price').text(data.Cprecio);
+        })
+    }           
+    setInterval(actualizarPrecio, 1000); 
+    
+    function actualizarDatos() {
+        $.getJSON(`/datos?ticker=${ticker}`, function(data) {
+
+            $('.precio_banda').text(data.precio_banda);  
+            $('.contador').text(data.contador);
+
+            $('.rts_control_pos1').text(data.rts_control_pos1);
+            $('.rts_control_pos2').text(data.rts_control_pos2);
+            $('.rts_control_pos3').text(data.rts_control_pos3);
+            $('.rts_control_pos4').text(data.rts_control_pos4);
+            $('.rts_control_pos5').text(data.rts_control_pos5);
+
+            $('.rtl_control_pos1').text(data.rtl_control_pos1);
+            $('.rtl_control_pos2').text(data.rtl_control_pos2);
+            $('.rtl_control_pos3').text(data.rtl_control_pos3);
+            $('.rtl_control_pos4').text(data.rtl_control_pos4);
+            $('.rtl_control_pos5').text(data.rtl_control_pos5);
+
+            $('.rts_control_TP1').text(data.rts_control_TP1);
+            $('.rts_control_TP2').text(data.rts_control_TP2);
+            $('.rts_control_TP3').text(data.rts_control_TP3);
+            $('.rts_control_TP4').text(data.rts_control_TP4);
+            $('.rts_control_TP5').text(data.rts_control_TP5);
+
+            $('.rtl_control_TP1').text(data.rtl_control_TP1);
+            $('.rtl_control_TP2').text(data.rtl_control_TP2);
+            $('.rtl_control_TP3').text(data.rtl_control_TP3);
+            $('.rtl_control_TP4').text(data.rtl_control_TP4);
+            $('.rtl_control_TP5').text(data.rtl_control_TP5);
+
+            $('.rts_PE_Pos1').text(data.rts_PE_Pos1);  
+            $('.rts_PE_Pos2').text(data.rts_PE_Pos2);  
+            $('.rts_PE_Pos3').text(data.rts_PE_Pos3);  
+            $('.rts_PE_Pos4').text(data.rts_PE_Pos4);  
+            $('.rts_PE_Pos5').text(data.rts_PE_Pos5);  
+
+            $('.rtl_PE_Pos1').text(data.rtl_PE_Pos1);  
+            $('.rtl_PE_Pos2').text(data.rtl_PE_Pos2);  
+            $('.rtl_PE_Pos3').text(data.rtl_PE_Pos3);  
+            $('.rtl_PE_Pos4').text(data.rtl_PE_Pos4);  
+            $('.rtl_PE_Pos5').text(data.rtl_PE_Pos5);  
+
+            $('.rts_TP_Pos1').text(data.rts_TP_Pos1);  
+            $('.rts_TP_Pos2').text(data.rts_TP_Pos2);  
+            $('.rts_TP_Pos3').text(data.rts_TP_Pos3);  
+            $('.rts_TP_Pos4').text(data.rts_TP_Pos4);  
+            $('.rts_TP_Pos5').text(data.rts_TP_Pos5);  
+
+            $('.rtl_TP_Pos1').text(data.rtl_TP_Pos1);  
+            $('.rtl_TP_Pos2').text(data.rtl_TP_Pos2);  
+            $('.rtl_TP_Pos3').text(data.rtl_TP_Pos3);  
+            $('.rtl_TP_Pos4').text(data.rtl_TP_Pos4);  
+            $('.rtl_TP_Pos5').text(data.rtl_TP_Pos5);  
+
+            $('.rts_Qty_USDT_SubPosicion1').text(data.rts_Qty_USDT_SubPosicion1);
+            $('.rts_Qty_USDT_SubPosicion2').text(data.rts_Qty_USDT_SubPosicion2);
+            $('.rts_Qty_USDT_SubPosicion3').text(data.rts_Qty_USDT_SubPosicion3);
+            $('.rts_Qty_USDT_SubPosicion4').text(data.rts_Qty_USDT_SubPosicion4);
+            $('.rts_Qty_USDT_SubPosicion5').text(data.rts_Qty_USDT_SubPosicion5);
+
+            $('.rtl_Qty_USDT_SubPosicion1').text(data.rtl_Qty_USDT_SubPosicion1);
+            $('.rtl_Qty_USDT_SubPosicion2').text(data.rtl_Qty_USDT_SubPosicion2);
+            $('.rtl_Qty_USDT_SubPosicion3').text(data.rtl_Qty_USDT_SubPosicion3);
+            $('.rtl_Qty_USDT_SubPosicion4').text(data.rtl_Qty_USDT_SubPosicion4);
+            $('.rtl_Qty_USDT_SubPosicion5').text(data.rtl_Qty_USDT_SubPosicion5);
+           
+            $('.sd_ValorPuro_Tot').text(data.sd_ValorPuro_Tot);
+            $('.sd_Bal_Pos').text(data.sd_Bal_Pos);
+        })
+    }           
+    setInterval(actualizarDatos, 5000); 
+    actualizarDatos();
+</script>
+
+<script>
+    let csvUrl = '';
+
+    const headers = [
+        'ID','Type','SL','PE','TP','PnL','Qty$',
+        'Qvar','QVar Rec','Qty Total','Balance','V. Puro','Comision','Time'
+    ];
+
+    function getRowClass(col2) {
+        if (typeof col2 !== 'string') return '';
+        if (col2.startsWith('TP')) return 'green-bg';
+        if (col2.startsWith('SL')) return 'blue-bg';
+        return '';
+    }
+    function isRestartRow(row) {
+    return Array.isArray(row) &&
+           row.length > 1 &&
+           String(row[1] ?? '').trim().toUpperCase() === 'RESTART';
+}
+
+function renderTable(data) {
+    const tabla = document.getElementById('tablaCsv');
+    tabla.innerHTML = '';
+
+    const thead = document.createElement('thead');
+    const trHead = document.createElement('tr');
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h;
+        trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+    tabla.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    data.forEach((rawRow) => {
+        // Normaliza: si viene objeto, lo convierte a array por orden de headers
+        const row = Array.isArray(rawRow)
+            ? rawRow
+            : [
+                rawRow.ID, rawRow.Type, rawRow.SL, rawRow.PE, rawRow.TP, rawRow.PnL, rawRow['Qty$'],
+                rawRow.Qvar, rawRow['QVar Rec'], rawRow['Qty Total'], rawRow.Balance, rawRow['V. Puro'], rawRow.Comision, rawRow.Time
+              ];
+
+        if (isRestartRow(row)) {
+    const inputSlValue = row.length > 14 ? row[14] : '';
+    const tr = document.createElement('tr');
+    tr.className = 'restart-row';
+
+    const td = document.createElement('td');
+    td.textContent = `RESTART - ${inputSlValue}`;
+    td.colSpan = headers.length;
+
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+}
+
+        const tr = document.createElement('tr');
+        const colorClass = getRowClass(String(row[1] ?? ''));
+        if (colorClass) tr.classList.add(colorClass);
+
+        for (let i = 0; i < headers.length; i++) {
+            const td = document.createElement('td');
+            td.textContent = (row[i] ?? '');
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    });
+
+    tabla.appendChild(tbody);
+}
+
+function cargarCSV() {
+    const url = `/movimientos?ticker=${encodeURIComponent(ticker)}`;
+    console.log('[DEBUG] URL movimientos =', url);
+
+    $.getJSON(url, function(filas) {
+        console.log('[DEBUG] filas:', filas);
+        if (!Array.isArray(filas)) {
+            console.error('Formato inesperado en /movimientos:', filas);
+            document.getElementById('tablaCsv').innerHTML =
+                '<tr><td colspan="14" style="color:red;">Formato inválido de datos</td></tr>';
+            return;
+        }
+        renderTable(filas);
+    }).fail(function(error) {
+        console.error('Error cargando movimientos:', error);
+        document.getElementById('tablaCsv').innerHTML =
+            '<tr><td colspan="14" style="color:red;">Error al cargar movimientos de la DB</td></tr>';
+    });
+}
+
+cargarCSV();
+</script>
+
+<script>
+    function generarTablaNiveles() {
+      const niveles = [1, 2, 3, 4, 5];
+
+      const colHeaders = [];
+      niveles.forEach(i => colHeaders.push(`N${i}S`));
+      niveles.forEach(i => colHeaders.push(`N${i}L`));
+
+      const filas = [
+        {
+          label: 'SL (fds)',
+          celdas: function(side, i) {
+            if (side === 'S') return i !== 1 ? `fds_step${i-1}_valor` : 'precio_banda';
+            else return i !== 1 ? `fdl_step${i-1}_valor` : 'precio_banda';
+          }
+        },
+        {
+          label: 'Po (fds)',
+          celdas: function(side, i) {
+            return side === 'S' ? `fds_Po${i}_valor` : `fdl_Po${i}_valor`;
+          }
+        },
+        {
+          label: 'PE (rts)',
+          celdas: function(side, i) {
+            return side === 'S' ? `rts_PE_Pos${i}` : `rtl_PE_Pos${i}`;
+          }
+        },
+        {
+          label: 'TP (fds)',
+          celdas: function(side, i) {
+            return side === 'S' ? `fds_step${i}_valor` : `fdl_step${i}_valor`;
+          }
+        },
+        {
+          label: 'TP (rts)',
+          celdas: function(side, i) {
+            return side === 'S' ? `rts_TP_Pos${i}` : `rtl_TP_Pos${i}`;
+          }
+        },
+        {
+          label: 'Estado',
+          celdas: function(side, i) {
+            return side === 'S' ? `rts_control_pos${i}` : `rtl_control_pos${i}`;
+          }
+        },
+        {
+          label: 'Est TP',
+          celdas: function(side, i) {
+            return side === 'S' ? `rts_control_TP${i}` : `rtl_control_TP${i}`;
+          }
+        },
+        {
+          label: 'QtyMVar (fds)',
+          celdas: function(side, i) {
+            return side === 'S' ? `fds_Qty_mVar${i}` : `fdl_Qty_mVar${i}`;
+          }
+        },
+        {
+          label: 'QtyUSDT (rts)',
+          celdas: function(side, i) {
+            return side === 'S' ? `rts_Qty_USDT_SubPosicion${i}` : `rtl_Qty_USDT_SubPosicion${i}`;
+          }
+        },
+        {
+          label: '% SubSL (fds)',
+          celdas: function(side, i) {
+            return side === 'S' ? `fds_perc_SubSL${i}` : `fdl_perc_SubSL${i}`;
+          }
+        }
+      ];
+
+      let html = '<table class="tablafija"><thead><tr><th></th>';
+      colHeaders.forEach(h => { html += `<th>${h}</th>`; });
+      html += '</tr></thead><tbody>';
+
+      filas.forEach(fila => {
+        html += `<tr><td>${fila.label}</td>`;
+        niveles.forEach(i => {
+          const cls = fila.celdas('S', i);
+          html += `<td><span class="${cls}"></span></td>`;
+        });
+        niveles.forEach(i => {
+          const cls = fila.celdas('L', i);
+          html += `<td><span class="${cls}"></span></td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      return html;
+    }
+
+    document.getElementById("tabla-niveles-container").innerHTML = generarTablaNiveles();
+</script>
+
+</body>
+</html>

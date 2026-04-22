@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APP</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #d1d5db;
+            --accent: #2563eb;
+            --green: #16a34a;
+            --red: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 16px;
+        }
+
+        /* Barra superior fija */
+        .sticky-bar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .sticky-bar table.tablaform {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .sticky-bar table.tablaform td {
+            padding: 4px 8px;
+            vertical-align: middle;
+        }
+
+        .sticky-bar input[type="text"],
+        .sticky-bar select {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        button {
+            background: #e0e7ff;          /* azul muy suave */
+            color: #3730a3;                /* texto azul oscuro para contraste */
+            border: 1px solid #c7d2fe;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        button:hover {
+            background: #c7d2fe;
+            border-color: #a5b4fc;
+        }
+
+        /* Tabla principal de símbolos */
+        table.tablaform {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        table.tablaform thead td {
+            background: #f3f4f6;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px 6px;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        table.tablaform tbody td {
+            border: 1px solid var(--border);
+            padding: 6px 8px;
+            text-align: right;
+        }
+
+        table.tablaform tbody td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        table.tablaform tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        #ip, #autorizacion {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1000px) {
+            body { padding: 8px; }
+            .sticky-bar table.tablaform td { display: inline-block; }
+        }
+    </style>
+</head>
+<body>
+ 
+    <div class="sticky-bar">
+        <table class="tablaform">
+               <tr>
+                <form id="mainForm" action="/mainstart" method="POST" enctype="multipart/form-data">
+                    <td>V1R <input type="text" name="USDT1r" value="5" size="4"></td>
+                    <td>P2R <input type="text" name="p2r" value="5" size="4"></td>
+                    <td>Modo <select name="modo_post_form" style="width: 70px;"><option value="1" selected>Real</option><option value="2">Simular</option></select></td>
+
+                   <input type="hidden" name="ticker" id="general_ticker">
+                   <input type="hidden" name="send" id="general_send">
+                </form>
+                   <td><button onclick="window.open('/analisis', '_blank')">Analisis</button></td> 
+                   <td><span id="ip"></span> </td>    
+                   <td><span id="autorizacion"></span> </td>    
+                </tr>
+        </table>  
+    </div>
+  
+  <script>
+    fetch('/getip')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('ip').textContent = data.ip;
+
+        const autEl = document.getElementById('autorizacion');
+        if(data.ip_check) {
+          autEl.textContent = "Autorizado";
+          autEl.style.color = "black";
+        } else {
+          autEl.textContent = "No autorizado";
+          autEl.style.color = "red";
+        }
+      });
+  </script>
+
+    <table class="tablaform">
+        <thead>
+            <td>Ticker</td>
+            <td>Estado</td>
+            <td>Iniciar</td>
+            <td>Abrir</td>
+            <td>PE</td>
+            <td>PA</td>
+            <td>LS</td>
+            <td>LI</td>
+            <td>Act SUP</td>
+            <td>Act Inf</td>
+            <td>%</td>
+            <td>V. Total</td>
+            <td>Niveles</td>
+            <td>Posicion</td>
+            <td>Fecha Inicio</td>
+            <td>Simulacion</td>
+            <td>Detener</td>
+        </thead>
+        <tbody id="tbody-simbolos"></tbody>
+    </table>
+    
+
+    
+    <script>
+const simbolos = ['btcusdt', 'ethusdt',  'bnbusdt', 'solusdt', 'xrpusdt', 'trxusdt', 'avaxusdt', 'tonusdt', 'ltcusdt',
+               '1000shibusdt', 'dogeusdt','adausdt','xlmusdt','xmrusdt','dotusdt','uniusdt','aptusdt','nearusdt',
+               'fetusdt','arbusdt','hyperusdt','suiusdt','bchusdt','linkusdt','hbarusdt','1000pepeusdt','aaveusdt',
+               'taousdt','icpusdt','etcusdt','ondousdt', 'kasusdt', 'atomusdt', 'vetusdt', 'renderusdt', 'enausdt', 
+               'filusdt', 'wldusdt', 'algousdt', 'qntusdt',
+                 'seiusdt', 'jupusdt', 'spxusdt', 'injusdt', 'tiausdt', 'virtualusdt', 'stxusdt', 'opusdt', 'penguusdt', 'iotausdt',
+                 'imxusdt', 'grtusdt', 'ipusdt', 'cakeusdt', 'jtousdt', 'crvusdt', 'thetausdt', 'ldousdt', 'galausdt', 'zecusdt'];
+
+function generarFilasTabla(simbolos) {
+    let html = '';
+    simbolos.forEach(simbolo => {
+        let nombre = simbolo.replace('usdt', '').toUpperCase();
+        html += `
+        <tr>
+            <td>${nombre}</td>
+            <td><span id="estado-${simbolo}"></span></td>
+             <td><button type="button" onclick="enviarGeneral('${simbolo}', 'iniciar')">INICIAR</button></td>
+            <td><button name="button" onclick="window.open('/main?ticker=${simbolo}', '_blank')">ABRIR</button></td>
+            <td><span id="${simbolo}_precio_banda"></span></td>
+            <td><span id="${simbolo}_Cprecio"></span></td>
+            <td><span id="${simbolo}_limite_superior"></span></td>
+            <td><span id="${simbolo}_limite_inferior"></span></td>
+            <td><span id="${simbolo}_act_sup"></span></td>
+            <td><span id="${simbolo}_act_inf"></span></td>
+            <td><span id="${simbolo}_percentsl"></span></td>
+            <td><span id="${simbolo}_sd_ValorPuro_Tot"></span></td>
+            <td><span id="${simbolo}_input_niveles"></span></td>
+            <td><span id="${simbolo}_sd_posicion"></span></td>
+            <td><span id="${simbolo}_sd_fechainicio"></span></td>
+            <td><span id="${simbolo}_ps_simulacion"></span></td>
+            <td><button name="button" onclick="window.location.href='/stopsocket?ticker=${simbolo}'">DETENER</button></td>
+        </tr>
+        `;
+    });
+    return html;
+}
+document.getElementById('tbody-simbolos').innerHTML = generarFilasTabla(simbolos);
+
+    function enviarGeneral(ticker, accion) {
+        document.getElementById('general_ticker').value = ticker;
+        document.getElementById('general_send').value = accion;
+        document.getElementById('mainForm').submit();
+    }
+
+        
+        
+        function actualizarEstadoThreads() {
+            fetch('/socket_status')
+                .then(res => res.json())
+                .then(data => {
+                    const ethEstado = data["ethusdt"] ? "Activo" : "Inactivo";
+                    const btcEstado = data["btcusdt"] ? "Activo" : "Inactivo";
+                    const bnbEstado = data["bnbusdt"] ? "Activo" : "Inactivo";
+                    const solEstado = data["solusdt"] ? "Activo" : "Inactivo";
+                    const xrpEstado = data["xrpusdt"] ? "Activo" : "Inactivo";
+                    const trxEstado = data["trxusdt"] ? "Activo" : "Inactivo";
+                    const avaxEstado = data["avaxusdt"] ? "Activo" : "Inactivo";
+                    const tonEstado = data["tonusdt"] ? "Activo" : "Inactivo";
+                    const ltcEstado = data["ltcusdt"] ? "Activo" : "Inactivo";
+                    const shibEstado = data["1000shibusdt"] ? "Activo" : "Inactivo";
+                    const dogeEstado = data["dogeusdt"] ? "Activo" : "Inactivo";
+                    const adaEstado = data["adausdt"] ? "Activo" : "Inactivo";
+                    const xlmEstado = data["xlmusdt"] ? "Activo" : "Inactivo";
+                    const xmrEstado = data["xmrusdt"] ? "Activo" : "Inactivo";
+                    const dotEstado = data["dotusdt"] ? "Activo" : "Inactivo";
+                    const uniEstado = data["uniusdt"] ? "Activo" : "Inactivo";
+                    const aptEstado = data["aptusdt"] ? "Activo" : "Inactivo";
+                    const nearEstado = data["nearusdt"] ? "Activo" : "Inactivo";
+                    const fetEstado = data["fetusdt"] ? "Activo" : "Inactivo";
+                    const arbEstado = data["arbusdt"] ? "Activo" : "Inactivo";
+                    const hyperEstado = data["hyperusdt"] ? "Activo" : "Inactivo";
+                    const suiEstado = data["suiusdt"] ? "Activo" : "Inactivo";
+                    const bchEstado = data["bchusdt"] ? "Activo" : "Inactivo";
+                    const linkEstado = data["linkusdt"] ? "Activo" : "Inactivo";
+                    const hbarEstado = data["hbarusdt"] ? "Activo" : "Inactivo";
+                    const pepeEstado = data["1000pepeusdt"] ? "Activo" : "Inactivo";
+                    const aaveEstado = data["aaveusdt"] ? "Activo" : "Inactivo";
+                    const taoEstado = data["taousdt"] ? "Activo" : "Inactivo";
+                    const icpEstado = data["icpusdt"] ? "Activo" : "Inactivo";
+                    const etcEstado = data["etcusdt"] ? "Activo" : "Inactivo";
+                    const ondoEstado     = data["ondousdt"]     ? "Activo" : "Inactivo";
+                    const kasEstado      = data["kasusdt"]      ? "Activo" : "Inactivo";
+                    const atomEstado     = data["atomusdt"]     ? "Activo" : "Inactivo";
+                    const vetEstado      = data["vetusdt"]      ? "Activo" : "Inactivo";
+                    const renderEstado   = data["renderusdt"]   ? "Activo" : "Inactivo";
+                    const enaEstado      = data["enausdt"]      ? "Activo" : "Inactivo";
+                    const filEstado      = data["filusdt"]      ? "Activo" : "Inactivo";
+                    const wldEstado      = data["wldusdt"]      ? "Activo" : "Inactivo";
+                    const algoEstado     = data["algousdt"]     ? "Activo" : "Inactivo";
+                    const qntEstado      = data["qntusdt"]      ? "Activo" : "Inactivo";
+                    const seiEstado      = data["seiusdt"]      ? "Activo" : "Inactivo";
+                    const jupEstado      = data["jupusdt"]      ? "Activo" : "Inactivo";
+                    const spxEstado      = data["spxusdt"]      ? "Activo" : "Inactivo";
+                    const injEstado      = data["injusdt"]      ? "Activo" : "Inactivo";
+                    const tiaEstado      = data["tiausdt"]      ? "Activo" : "Inactivo";
+                    const virtualEstado  = data["virtualusdt"]  ? "Activo" : "Inactivo";
+                    const stxEstado      = data["stxusdt"]      ? "Activo" : "Inactivo";
+                    const opEstado       = data["opusdt"]       ? "Activo" : "Inactivo";
+                    const penguEstado    = data["penguusdt"]    ? "Activo" : "Inactivo";
+                    const iotaEstado      = data["iotausdt"]      ? "Activo" : "Inactivo";
+                    const imxEstado      = data["imxusdt"]      ? "Activo" : "Inactivo";
+                    const grt2Estado     = data["grtusdt"]      ? "Activo" : "Inactivo";
+                    const ipEstado       = data["ipusdt"]       ? "Activo" : "Inactivo";
+                    const cakeEstado     = data["cakeusdt"]     ? "Activo" : "Inactivo";
+                    const jtoEstado      = data["jtousdt"]      ? "Activo" : "Inactivo";
+                    const crvEstado      = data["crvusdt"]      ? "Activo" : "Inactivo";
+                    const thetaEstado    = data["thetausdt"]    ? "Activo" : "Inactivo";
+                    const ldoEstado      = data["ldousdt"]      ? "Activo" : "Inactivo";
+                    const galaEstado     = data["galausdt"]     ? "Activo" : "Inactivo";
+                    const zecEstado      = data["zecusdt"]      ? "Activo" : "Inactivo";
+        
+                    document.getElementById("estado-ethusdt").innerText = ethEstado;
+                    document.getElementById("estado-btcusdt").innerText = btcEstado;
+                    document.getElementById("estado-bnbusdt").innerText = bnbEstado;
+                    document.getElementById("estado-solusdt").innerText = solEstado;
+                    document.getElementById("estado-xrpusdt").innerText = xrpEstado;
+                    document.getElementById("estado-trxusdt").innerText = trxEstado;
+                    document.getElementById("estado-avaxusdt").innerText = avaxEstado;
+                    document.getElementById("estado-tonusdt").innerText = tonEstado;
+                    document.getElementById("estado-ltcusdt").innerText = ltcEstado;
+                    document.getElementById("estado-1000shibusdt").innerText = shibEstado;
+                    document.getElementById("estado-dogeusdt").innerText = dogeEstado;
+                    document.getElementById("estado-adausdt").innerText = adaEstado;
+                    document.getElementById("estado-xlmusdt").innerText = xlmEstado;
+                    document.getElementById("estado-xmrusdt").innerText = xmrEstado;
+                    document.getElementById("estado-dotusdt").innerText = dotEstado;
+                    document.getElementById("estado-uniusdt").innerText = uniEstado;
+                    document.getElementById("estado-aptusdt").innerText = aptEstado;
+                    document.getElementById("estado-nearusdt").innerText = nearEstado;
+                    document.getElementById("estado-fetusdt").innerText = fetEstado;
+                    document.getElementById("estado-arbusdt").innerText = arbEstado;
+                    document.getElementById("estado-hyperusdt").innerText = hyperEstado;
+                    document.getElementById("estado-suiusdt").innerText = suiEstado;
+                    document.getElementById("estado-bchusdt").innerText = bchEstado;
+                    document.getElementById("estado-linkusdt").innerText = linkEstado;
+                    document.getElementById("estado-hbarusdt").innerText = hbarEstado;
+                    document.getElementById("estado-1000pepeusdt").innerText = pepeEstado;
+                    document.getElementById("estado-aaveusdt").innerText = aaveEstado;
+                    document.getElementById("estado-taousdt").innerText = taoEstado;
+                    document.getElementById("estado-icpusdt").innerText = icpEstado;
+                    document.getElementById("estado-etcusdt").innerText = etcEstado;
+                    document.getElementById("estado-ondousdt").innerText    = ondoEstado;
+                    document.getElementById("estado-kasusdt").innerText     = kasEstado;
+                    document.getElementById("estado-atomusdt").innerText    = atomEstado;
+                    document.getElementById("estado-vetusdt").innerText     = vetEstado;
+                    document.getElementById("estado-renderusdt").innerText  = renderEstado;
+                    document.getElementById("estado-enausdt").innerText     = enaEstado;
+                    document.getElementById("estado-filusdt").innerText     = filEstado;
+                    document.getElementById("estado-wldusdt").innerText     = wldEstado;
+                    document.getElementById("estado-algousdt").innerText    = algoEstado;
+                    document.getElementById("estado-qntusdt").innerText     = qntEstado;
+                    document.getElementById("estado-seiusdt").innerText     = seiEstado;
+                    document.getElementById("estado-jupusdt").innerText     = jupEstado;
+                    document.getElementById("estado-spxusdt").innerText     = spxEstado;
+                    document.getElementById("estado-injusdt").innerText     = injEstado;
+                    document.getElementById("estado-tiausdt").innerText     = tiaEstado;
+                    document.getElementById("estado-virtualusdt").innerText = virtualEstado;
+                    document.getElementById("estado-stxusdt").innerText     = stxEstado;
+                    document.getElementById("estado-opusdt").innerText      = opEstado;
+                    document.getElementById("estado-penguusdt").innerText   = penguEstado;
+                    document.getElementById("estado-iotausdt").innerText     = iotaEstado;
+                    document.getElementById("estado-imxusdt").innerText     = imxEstado;
+                    document.getElementById("estado-grtusdt").innerText     = grt2Estado;
+                    document.getElementById("estado-ipusdt").innerText      = ipEstado;
+                    document.getElementById("estado-cakeusdt").innerText    = cakeEstado;
+                    document.getElementById("estado-jtousdt").innerText     = jtoEstado;
+                    document.getElementById("estado-crvusdt").innerText     = crvEstado;
+                    document.getElementById("estado-thetausdt").innerText   = thetaEstado;
+                    document.getElementById("estado-ldousdt").innerText     = ldoEstado;
+                    document.getElementById("estado-galausdt").innerText    = galaEstado;
+                    document.getElementById("estado-zecusdt").innerText     = zecEstado;
+                });
+        } 
+        window.addEventListener("DOMContentLoaded", actualizarEstadoThreads);
+
+    
+            
+   function actualizarPControl() {
+    fetch('/datos_PControl')
+        .then(response => response.json())
+        .then(data => {
+            for (const [ticker, campos] of Object.entries(data)) {
+                for (const [campo, valor] of Object.entries(campos)) {
+                    const span = document.getElementById(`${ticker}_${campo}`);
+                    if (span) {
+                        if (valor === 0 || valor === "0") {
+                            span.textContent = "";
+                        } else {
+                            span.textContent = valor;
+                        }
+                    }
+                }
+            }
+        });
+}
+setInterval(actualizarPControl, 1000);
+actualizarPControl();
+
+          
+</script>
+
+</body>
+</html>

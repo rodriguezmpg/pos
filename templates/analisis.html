@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisis</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --grid: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px 40px;
+    }
+
+    h1 { margin: 0 0 16px; font-size: 28px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .message {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .error { color: var(--red); font-weight: bold; }
+    .success { color: var(--green); font-weight: bold; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      text-align: right;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    thead th { background: #f3f4f6; }
+
+    .section-title { margin: 0 0 10px; font-size: 20px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .mini-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fafafa;
+    }
+
+    .mini-card .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .mini-card .value {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .neutral { color: var(--text); }
+
+    .canvas-wrap { width: 100%; overflow-x: auto; }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: block;
+    }
+
+    .small-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hidden { display: none; }
+
+    .mostrar-secuencia-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #111827;
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .modal-secuencia-bg {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-secuencia-bg.active {
+      display: flex;
+    }
+    .modal-secuencia-content {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px 28px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+    .modal-secuencia-close {
+      position: absolute;
+      top: 10px; right: 14px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .modal-secuencia-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .modal-secuencia-text {
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .search-box {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      width: 220px;
+      margin-bottom: 4px;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    #accumulatedTable tbody tr:hover {
+      background: #eef2ff;
+    }
+
+    .row-tp {
+      background: #dcfce7;
+    }
+
+    .td-ticker {
+      cursor: pointer;
+    }
+
+    @media (max-width: 700px) {
+      th, td { font-size: 12px; padding: 6px; }
+      .mini-card .value { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+<div class="card">
+      <div class="message" id="message">Cargando analisis.csv...</div>
+    </div>
+
+    <div id="results" class="hidden">
+      <div class="card">
+        <h2 class="section-title">Resumen general</h2>
+        <div class="stats-grid">
+          <div class="mini-card">
+            <div class="label">Cantidad BE</div>
+            <div class="value neutral" id="cantidadBE">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Cantidad TP</div>
+            <div class="value positive" id="cantidadTP">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Cantidad SL</div>
+            <div class="value negative" id="cantidadSL">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Total registros válidos</div>
+            <div class="value neutral" id="cantidadTotal">0</div>
+          </div>
+        </div>
+
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>Cantidad</th>
+              <th>Positivos</th>
+              <th>Negativos</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Acumulado</h2>
+        <div class="stats-grid">
+          <div class="mini-card">
+            <div class="label">Máximo acumulado positivo</div>
+            <div class="value positive" id="maxPositive">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Máximo acumulado negativo</div>
+            <div class="value negative" id="maxNegative">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="label">Acumulado final</div>
+            <div class="value neutral" id="finalAccumulated">0</div>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="chart" width="1100" height="420"></canvas>
+        </div>
+        <div class="small-note">
+          Línea azul: acumulado de la columna Resultado. Línea gris horizontal: nivel 0.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Detalle de acumulado</h2>
+        <input type="text" id="searchSymbol" class="search-box" placeholder="Buscar símbolo..." />
+        <table id="accumulatedTable">
+          <thead>
+            <tr>
+              <th>Símbolo</th>
+              <th>Estado</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>P. Entrada</th>
+              <th>P. Salida</th>
+              <th>Resultado</th>
+              <th>Acumulado</th>
+              <th>Secuencia</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-secuencia-bg" class="modal-secuencia-bg">
+    <div class="modal-secuencia-content">
+      <button class="modal-secuencia-close" id="modalSecuenciaCloseBtn" title="Cerrar">&times;</button>
+      <div class="modal-secuencia-title">Secuencia</div>
+      <div class="modal-secuencia-text" id="modalSecuenciaText"></div>
+    </div>
+  </div>
+
+  <script>
+    const message = document.getElementById("message");
+    const results = document.getElementById("results");
+    const searchSymbol = document.getElementById("searchSymbol");
+
+    const cantidadBE = document.getElementById("cantidadBE");
+    const cantidadTP = document.getElementById("cantidadTP");
+    const cantidadSL = document.getElementById("cantidadSL");
+    const cantidadTotal = document.getElementById("cantidadTotal");
+
+    const maxPositiveEl = document.getElementById("maxPositive");
+    const maxNegativeEl = document.getElementById("maxNegative");
+    const finalAccumulatedEl = document.getElementById("finalAccumulated");
+
+    const summaryTableBody = document.querySelector("#summaryTable tbody");
+    const accumulatedTableBody = document.querySelector("#accumulatedTable tbody");
+
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    let lastAccumulatedData = [];
+
+    searchSymbol.addEventListener("input", () => {
+      filterAccumulatedTable();
+    });
+
+    // Autoload al cargar la página
+window.addEventListener("DOMContentLoaded", () => {
+  fetch("/analisis_data")
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!data.length) throw new Error("La tabla no contiene filas válidas.");
+
+      const rows = data.map(cols => ({
+        ticker:      String(cols[0]).trim(),
+        estado:      String(cols[1]).trim(),
+        sl:          String(cols[2]).trim(),
+        inicio:      String(cols[3]).trim(),
+        fin:         String(cols[4]).trim(),
+        entradaRaw:  String(cols[5]).trim(),
+        salidaRaw:   String(cols[6]).trim(),
+        vcierre:     safeNumber(cols[7]),
+        balancePos:  safeNumber(cols[8]),
+        resultado:   safeNumber(cols[9]),
+        secuencia:   String(cols[10]).trim()
+      })).filter(r => isFinite(r.resultado));
+
+      const processed = processRows(rows);
+      renderResults(processed);
+
+      message.textContent = "Análisis cargado correctamente desde la base de datos.";
+      message.className = "message success";
+      results.classList.remove("hidden");
+    })
+    .catch(err => {
+      message.textContent = "Error al cargar análisis: " + err.message;
+      message.className = "message error";
+      results.classList.add("hidden");
+      clearUI();
+    });
+});
+
+
+
+    function safeNumber(value) {
+      const n = parseFloat(String(value).trim());
+      return isNaN(n) ? NaN : n;
+    }
+
+    function processRows(rows) {
+      const groups = {
+        BE: { estados: new Set(["BE"]), cantidad: 0, positivos: 0, negativos: 0, total: 0 },
+        TP: { estados: new Set(["TP5S", "TP5L"]), cantidad: 0, positivos: 0, negativos: 0, total: 0 },
+        SL: { estados: new Set(["SL1L", "SL1S"]), cantidad: 0, positivos: 0, negativos: 0, total: 0 }
+      };
+
+      const accumulatedData = [];
+      let accumulated = 0;
+      let maxPositive = Number.NEGATIVE_INFINITY;
+      let maxNegative = Number.POSITIVE_INFINITY;
+      let globalPositive = 0;
+      let globalNegative = 0;
+
+      rows.forEach((row) => {
+        const estado = row.estado;
+        const resultado = row.resultado;
+
+        for (const key of Object.keys(groups)) {
+          if (groups[key].estados.has(estado)) {
+            groups[key].cantidad += 1;
+            if (resultado > 0) groups[key].positivos += resultado;
+            else if (resultado < 0) groups[key].negativos += resultado;
+            groups[key].total = groups[key].positivos + groups[key].negativos;
+          }
+        }
+
+        if (resultado > 0) globalPositive += resultado;
+        else if (resultado < 0) globalNegative += resultado;
+
+        accumulated += resultado;
+        if (accumulated > maxPositive) maxPositive = accumulated;
+        if (accumulated < maxNegative) maxNegative = accumulated;
+
+        accumulatedData.push({
+          ticker: row.ticker,
+          estado: row.estado,
+          inicio: row.inicio,
+          fin: row.fin,
+          entradaRaw: row.entradaRaw,
+          salidaRaw: row.salidaRaw,
+          resultado: resultado,
+          acumulado: accumulated,
+          secuencia: row.secuencia
+        });
+      });
+
+      if (maxPositive === Number.NEGATIVE_INFINITY) maxPositive = 0;
+      if (maxNegative === Number.POSITIVE_INFINITY) maxNegative = 0;
+
+      return {
+        rows,
+        groups,
+        global: {
+          cantidad: rows.length,
+          positivos: globalPositive,
+          negativos: globalNegative,
+          total: globalPositive + globalNegative
+        },
+        accumulatedData,
+        maxPositive,
+        maxNegative,
+        finalAccumulated: accumulated
+      };
+    }
+
+    function renderResults(data) {
+      cantidadBE.textContent = data.groups.BE.cantidad;
+      cantidadTP.textContent = data.groups.TP.cantidad;
+      cantidadSL.textContent = data.groups.SL.cantidad;
+      cantidadTotal.textContent = data.global.cantidad;
+
+      maxPositiveEl.textContent = formatNumber(data.maxPositive);
+      maxNegativeEl.textContent = formatNumber(data.maxNegative);
+      finalAccumulatedEl.textContent = formatNumber(data.finalAccumulated);
+      applyValueClass(maxPositiveEl, data.maxPositive);
+      applyValueClass(maxNegativeEl, data.maxNegative);
+      applyValueClass(finalAccumulatedEl, data.finalAccumulated);
+
+      renderSummaryTable(data);
+
+      lastAccumulatedData = data.accumulatedData;
+      renderAccumulatedTable(data.accumulatedData);
+      drawChart(data.accumulatedData);
+    }
+
+    function renderSummaryTable(data) {
+      summaryTableBody.innerHTML = "";
+
+      const rows = [
+        { nombre: "BE", cantidad: data.groups.BE.cantidad, positivos: data.groups.BE.positivos, negativos: data.groups.BE.negativos, total: data.groups.BE.total },
+        { nombre: "TP", cantidad: data.groups.TP.cantidad, positivos: data.groups.TP.positivos, negativos: data.groups.TP.negativos, total: data.groups.TP.total },
+        { nombre: "SL", cantidad: data.groups.SL.cantidad, positivos: data.groups.SL.positivos, negativos: data.groups.SL.negativos, total: data.groups.SL.total },
+        { nombre: "TODOS", cantidad: data.global.cantidad, positivos: data.global.positivos, negativos: data.global.negativos, total: data.global.total }
+      ];
+
+      rows.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.nombre)}</td>
+          <td>${row.cantidad}</td>
+          <td class="${getClassByValue(row.positivos)}">${formatNumber(row.positivos)}</td>
+          <td class="${getClassByValue(row.negativos)}">${formatNumber(row.negativos)}</td>
+          <td class="${getClassByValue(row.total)}">${formatNumber(row.total)}</td>
+        `;
+        summaryTableBody.appendChild(tr);
+      });
+    }
+
+    function renderAccumulatedTable(accumulatedData) {
+      accumulatedTableBody.innerHTML = "";
+      accumulatedData.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.dataset.ticker = item.ticker.toLowerCase();
+
+        const isTP = item.estado === "TP5S" || item.estado === "TP5L";
+        if (isTP) tr.classList.add("row-tp");
+
+        const tickerLower = item.ticker.toLowerCase();
+        const tickerUpper = item.ticker.toUpperCase();
+
+        tr.innerHTML = `
+          <td class="td-ticker">${escapeHtml(tickerUpper)}</td>
+          <td>${escapeHtml(item.estado)}</td>
+          <td>${escapeHtml(item.inicio)}</td>
+          <td>${escapeHtml(item.fin)}</td>
+          <td>${escapeHtml(item.entradaRaw)}</td>
+          <td>${escapeHtml(item.salidaRaw)}</td>
+          <td class="${getClassByValue(item.resultado)}">${formatNumber(item.resultado)}</td>
+          <td class="${getClassByValue(item.acumulado)}">${formatNumber(item.acumulado)}</td>
+        `;
+
+        // Click en celda símbolo -> abrir /main?ticker=
+        tr.querySelector(".td-ticker").addEventListener("click", function() {
+          window.open(`/main?ticker=${tickerLower}`, "_blank");
+        });
+
+        const tdSec = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.className = "mostrar-secuencia-btn";
+        btn.textContent = "Secuencia";
+        btn.onclick = function() {
+          mostrarModalSecuencia(item.secuencia || '');
+        };
+        tdSec.appendChild(btn);
+        tr.appendChild(tdSec);
+
+        accumulatedTableBody.appendChild(tr);
+      });
+    }
+
+    function filterAccumulatedTable() {
+      const filter = searchSymbol.value.trim().toLowerCase();
+      const rows = accumulatedTableBody.querySelectorAll("tr");
+      rows.forEach(tr => {
+        if (!filter || tr.dataset.ticker.includes(filter)) {
+          tr.style.display = "";
+        } else {
+          tr.style.display = "none";
+        }
+      });
+    }
+
+    function drawChart(accumulatedData) {
+      const width = canvas.width;
+      const height = canvas.height;
+      const padding = 50;
+
+      ctx.clearRect(0, 0, width, height);
+      if (!accumulatedData || accumulatedData.length === 0) return;
+
+      const values = accumulatedData.map(d => d.acumulado);
+      const minVal = Math.min(...values, 0);
+      const maxVal = Math.max(...values, 0);
+
+      let range = maxVal - minVal;
+      if (range === 0) range = 1;
+
+      const chartWidth = width - padding * 2;
+      const chartHeight = height - padding * 2;
+      const xStep = accumulatedData.length > 1 ? chartWidth / (accumulatedData.length - 1) : chartWidth;
+
+      function getX(index) { return padding + index * xStep; }
+      function getY(value) { return padding + ((maxVal - value) / range) * chartHeight; }
+
+      const zeroY = getY(0);
+
+      drawGridLines(width, height, padding, chartWidth, chartHeight, minVal, maxVal, zeroY);
+      drawAxes(width, height, padding);
+
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#2563eb";
+
+      accumulatedData.forEach((point, index) => {
+        const x = getX(index);
+        const y = getY(point.acumulado);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      if (accumulatedData.length <= 150) {
+        ctx.fillStyle = "#2563eb";
+        accumulatedData.forEach((point, index) => {
+          const x = getX(index);
+          const y = getY(point.acumulado);
+          ctx.beginPath();
+          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+    }
+
+    function drawGridLines(width, height, padding, chartWidth, chartHeight, minVal, maxVal, zeroY) {
+      ctx.save();
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "12px Arial";
+
+      const horizontalLines = 5;
+      for (let i = 0; i <= horizontalLines; i++) {
+        const y = padding + (chartHeight / horizontalLines) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+
+        const value = maxVal - ((maxVal - minVal) / horizontalLines) * i;
+        ctx.fillText(formatNumber(value), 8, y + 4);
+      }
+
+      ctx.strokeStyle = "#9ca3af";
+      ctx.beginPath();
+      ctx.moveTo(padding, zeroY);
+      ctx.lineTo(width - padding, zeroY);
+      ctx.stroke();
+
+      ctx.fillStyle = "#374151";
+      ctx.fillText("0", 30, zeroY - 6);
+
+      ctx.restore();
+    }
+
+    function drawAxes(width, height, padding) {
+      ctx.save();
+      ctx.strokeStyle = "#374151";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function formatNumber(value) { return Number(value).toFixed(2); }
+
+    function getClassByValue(value) {
+      if (value > 0) return "positive";
+      if (value < 0) return "negative";
+      return "neutral";
+    }
+
+    function applyValueClass(el, value) {
+      el.classList.remove("positive", "negative", "neutral");
+      el.classList.add(getClassByValue(value));
+    }
+
+    function clearUI() {
+      summaryTableBody.innerHTML = "";
+      accumulatedTableBody.innerHTML = "";
+      cantidadBE.textContent = "0";
+      cantidadTP.textContent = "0";
+      cantidadSL.textContent = "0";
+      cantidadTotal.textContent = "0";
+      maxPositiveEl.textContent = "0";
+      maxNegativeEl.textContent = "0";
+      finalAccumulatedEl.textContent = "0";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lastAccumulatedData = [];
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function mostrarModalSecuencia(texto) {
+      document.getElementById('modalSecuenciaText').textContent = texto || '(Secuencia vacía)';
+      document.getElementById('modal-secuencia-bg').classList.add('active');
+    }
+    function cerrarModalSecuencia() {
+      document.getElementById('modal-secuencia-bg').classList.remove('active');
+    }
+    document.getElementById('modalSecuenciaCloseBtn').onclick = cerrarModalSecuencia;
+    document.getElementById('modal-secuencia-bg').onclick = function(e) {
+      if (e.target === this) cerrarModalSecuencia();
+    };
+    document.addEventListener('keydown', function(e){
+      if (e.key === "Escape") cerrarModalSecuencia();
+    });
+  </script>
+</body>
+</html>
