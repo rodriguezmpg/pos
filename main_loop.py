@@ -70,7 +70,8 @@ async def calculos(symbol, datasocket):
         fd.dec_precio , fd.dec_qty = obtenerdecimales(symbol)
         fd.Qty_min = round(Qty_min(symbol, rt.current_price), fd.dec_qty)
         fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
-        Grid(ps, fd, rt)       
+        Grid(ps, fd, rt)
+        
         print(f"Grillas listas para {symbol} - Simulacion = {ps.simulacion} - {fechayhora}")
         
         reinicio[symbol] = False  
@@ -151,9 +152,9 @@ def iniciar_socket_async(symbol):
     active_tasks[symbol] = task
     print(f"[SOCKET] Tarea enviada al loop para: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
     
-    #Comprobr si es la primera vez que se inicia para crear
-    ps, fd, rt = get_vars(symbol)
     
+    ps, fd, rt = get_vars(symbol)
+  
 
 def detener_socket(symbol):
     task = active_tasks.get(symbol)

@@ -31,6 +31,8 @@ def Grid(ps, fd, rt):
     fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
     fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
     fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
+
+    # fd.pnl1r = 
     
 
     if (fd.Qty_r2 < fd.Qty_min):

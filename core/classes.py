@@ -33,6 +33,10 @@ class FixedData:
         self.Qty_r2 = 0.00
         self.Qty_ts = 0.00
 
+        self.pnl1_r = 0.00
+        self.pnl1r = 0.00
+        self.pnl2r = 0.00
+
         self.Qty_mVar = 0.00
 
 
