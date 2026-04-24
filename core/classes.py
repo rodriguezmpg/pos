@@ -13,6 +13,8 @@ class FixedData:
     def __init__(self):
         self.fechainicio = None
         self.type_pos = ''
+        self.control = True
+        self.mensaje = ''
 
         self.Qty_min = 0
         self.dec_precio = 0
@@ -20,12 +22,16 @@ class FixedData:
 
         self.perc1r = 0.00
         self.perc2r = 0.00
-        self.valor_r = 0.00
+        self.perc1_r = 0.00
 
         self.r_1 = 0.00
         self.r0 = 0.00
         self.r1 = 0.00
         self.r2 = 0.00
+
+        self.Qty_r1 = 0.00
+        self.Qty_r2 = 0.00
+        self.Qty_ts = 0.00
 
         self.Qty_mVar = 0.00
 

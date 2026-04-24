@@ -39,7 +39,20 @@ def dat_fixed():
     fd = getattr(main_loop, f"{ticker}fd")  
  
     return jsonify({
-        'r_1': fd.r_1,
+        'fd_fechainicio': fd.fechainicio,
+        'fd_Qty_min': fd.Qty_min,
+        'fd_r_1': fd.r_1,
+        'fd_r0': fd.r0,
+        'fd_r1': fd.r1,
+        'fd_r2': fd.r2,
+        'fd_type_pos': fd.type_pos,
+        'fd_perc1_r': fd.perc1_r,
+        'fd_perc1r': fd.perc1r,
+        'fd_perc2r': fd.perc2r,
+        'fd_Qty_mVar': fd.Qty_mVar,
+        'fd_Qty_r1': fd.Qty_r1,
+        'fd_Qty_r2': fd.Qty_r2,
+        'fd_Qty_ts': fd.Qty_ts,
              
     })
 
@@ -47,8 +60,8 @@ def dat_fixed():
 @app.route('/precio') #Separo el precio para poder solicitarlo con intervalos menores
 def precio():
     ticker = request.args.get("ticker").lower()
-    sd  = getattr(main_loop, f"{ticker}sd")
-    return jsonify({'Cprecio': sd.current_price })  
+    rt  = getattr(main_loop, f"{ticker}rt")
+    return jsonify({'Cprecio': rt.current_price })  
 
 
 @app.route('/datos')
@@ -82,8 +95,8 @@ def datos_PControl():
         fd = getattr(main_loop, f"{ticker}fd")  
 
         resultado[ticker] = {
-            'precio_banda': fd.r0,
-            'ps_simulacion': ps.simulacion, 
+            'fd_r0': fd.r0,
+            'Cprecio': rt.current_price
                  
         }       
     return jsonify(resultado)
@@ -116,7 +129,6 @@ def start_trading():
     ps.USDT1r = float(request.form.get('USDT1r'))
     ps.p2r = float(request.form.get('p2r'))
     
-    if int(request.form.get('modo_post_form')) == 2: ps.simulacion = True
     
     if (request.form.get('send')) == 'iniciar': main_loop.iniciar_socket_async(ticker)
 

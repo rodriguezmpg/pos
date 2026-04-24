@@ -11,29 +11,34 @@ from core.orders import close_total, order_market, get_order_info
 
 def Grid(ps, fd, rt):
     
-    fd.perc2r = abs(ps.p2r - fd.r0) / fd.r0 * 100
-    fd.perc1r = (fd.perc2r / 2)
-    fd.valor_r = round(((fd.perc2r / 100)/2), 4)
+    fd.perc2r = round(abs(ps.p2r - fd.r0) / fd.r0 * 100,4)
+    fd.perc1r = round((fd.perc2r / 2),4)
+    fd.perc1_r = round(-fd.perc1r,4)
     
     if fd.r0 < ps.p2r:
         fd.type_pos = 'LONG'
-        fd.r_1 = round(fd.r0 * (1 - fd.valor_r), fd.dec_precio)
-        fd.r1 = round(fd.r0 * (1 + fd.valor_r), fd.dec_precio)
-        fd.r2 = round(fd.r0 * (1 + (fd.valor_r * 2)), fd.dec_precio)
+        fd.r_1 = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)
+        fd.r1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)
+        fd.r2 = round(fd.r0 * (1 + (fd.perc2r / 100)), fd.dec_precio)
     else:
         fd.type_pos = 'SHORT'
-        fd.r_1 = round(fd.r0 * (1 + fd.valor_r), fd.dec_precio)      
-        fd.r1  = round(fd.r0 * (1 - fd.valor_r), fd.dec_precio)     
-        fd.r2  = round(fd.r0 * (1 - fd.valor_r * 2), fd.dec_precio)
+        fd.r_1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)      
+        fd.r1  = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)     
+        fd.r2  = round(fd.r0 * (1 - (fd.perc2r / 100)), fd.dec_precio)
 
-        fd.Qty_mVar = ps.USDT1r / (fd.r0 * fd.perc1r)
+    fd.Qty_mVar = round(ps.USDT1r / (fd.r0 * fd.perc1r), fd.dec_qty)
+
+    fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
+    fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
+    fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
+    
+
+    if (fd.Qty_r2 < fd.Qty_min):
+        fd.control = False
+        fd.mensaje = 'Cantidad minima no aceptada'
 
         
-    print(f"tamanio ACEPTADO ps.USDT1r {ps.USDT1r} - fd.Qty_mVar:{fd.Qty_mVar} - fd.Qty_min{fd.Qty_min}")
-    if (fd.Qty_mVar / 4 < fd.Qty_min):
-        print(f"tamanio no aceptado fd.Qty_mVar:{fd.Qty_mVar} - fd.Qty_min{fd.Qty_min}")
-
-        
+    
 
     print(f"Grid Calculada - fd.type_pos: {fd.type_pos} | fd.valor_r: {fd.valor_r} | fd.perc2r: {fd.perc2r} | fd.r_1: {fd.r_1} | fd.r0: {fd.r0} | fd.r1: {fd.r1} | fd.r2: {fd.r2}")
    

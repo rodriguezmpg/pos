@@ -200,18 +200,18 @@
                         <tr>
                             <td>P. Actual</td>
                             <td><span class="current_price"></span></td>
-                            <td>Contador</td>
-                            <td><span class="contador"></span></td>
+                            <td>--</td>
+                            <td><span class=""></span></td>
                         </tr>
                         <tr>
                             <td>PE</td>
-                            <td><span class="precio_banda"></span></td>
-                            <td>Niveles</td>
-                            <td><span class="input_niveles"></span></td>
+                            <td><span class="fd_r0"></span></td>
+                            <td>Type</td>
+                            <td><span class="fd_type_pos"></span></td>
                         </tr>
                         <tr>
-                            <td>% SL</td>
-                            <td><span class="percentsl"></span></td>
+                            <td>QtymVar</td>
+                            <td><span class="fd_Qty_mVar"></span></td>
                             <td></td>
                             <td></td>
                         </tr>
@@ -220,57 +220,43 @@
             </div>
 
             <div class="card">
-                <div class="card-title">Parámetros fijos</div>
+                <div class="card-title">Grilla</div>
                 <table class="tablafija">
                     <tbody>
-                        <tr><td>fds_Po1</td><td><span class="fds_Po1_valor"></span></td><td>fdl_Po1</td><td><span class="fdl_Po1_valor"></span></td></tr>
-                        <tr><td>fds_step1</td><td><span class="fds_step1_valor"></span></td><td>fdl_step1</td><td><span class="fdl_step1_valor"></span></td></tr>
-                        <tr><td>fds_Po2</td><td><span class="fds_Po2_valor"></span></td><td>fdl_Po2</td><td><span class="fdl_Po2_valor"></span></td></tr>
-                        <tr><td>fds_step2</td><td><span class="fds_step2_valor"></span></td><td>fdl_step2</td><td><span class="fdl_step2_valor"></span></td></tr>
-                        <tr><td>fds_Po3</td><td><span class="fds_Po3_valor"></span></td><td>fdl_Po3</td><td><span class="fdl_Po3_valor"></span></td></tr>
-                        <tr><td>fds_step3</td><td><span class="fds_step3_valor"></span></td><td>fdl_step3</td><td><span class="fdl_step3_valor"></span></td></tr>
-                        <tr><td>fds_Po4</td><td><span class="fds_Po4_valor"></span></td><td>fdl_Po4</td><td><span class="fdl_Po4_valor"></span></td></tr>
-                        <tr><td>fds_step4</td><td><span class="fds_step4_valor"></span></td><td>fdl_step4</td><td><span class="fdl_step4_valor"></span></td></tr>
-                        <tr><td>fds_Po5</td><td><span class="fds_Po5_valor"></span></td><td>fdl_Po5</td><td><span class="fdl_Po5_valor"></span></td></tr>
-                        <tr><td>fds_step5</td><td><span class="fds_step5_valor"></span></td><td>fdl_step5</td><td><span class="fdl_step5_valor"></span></td></tr>
-                        <tr><td>Lim Inf</td><td><span class="limite_inferior"></span></td><td>Lim Sup</td><td><span class="limite_superior"></span></td></tr>
-                    </tbody>
+                        <tr>
+                            <td>R</td>
+                            <td>Valor</td>
+                            <td>Dist.</td>
+                            <td>Qty</td>
+                        </tr>
+                        <tr>
+                            <td>r_1</td>
+                            <td><span class="fd_r_1"></span></td>
+                            <td><span class="fd_perc1_r"></span></td>
+                            <td><span class="fd_Qty_mVar"></span></td>
+                        </tr>
+                        <tr>
+                            <td>r0</td>
+                            <td><span class="fd_r0"></span></td>
+                            <td><span class="fd_Qty_mVar"></span></td>
+                        </tr>
+                        <tr>
+                            <td>r1</td>
+                            <td><span class="fd_r1"></span></td>
+                            <td><span class="fd_perc1r"></span></td>
+                            <td><span class="fd_Qty_r1"></span></td>
+                        </tr>
+                        <tr>
+                            <td>r2</td>
+                            <td><span class="fd_r2"></span></td>
+                            <td><span class="fd_perc2r"></span></td>
+                            <td><span class="fd_Qty_r2"></span></td>
+                        </tr>
+             </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- COL 2: Short + Long -->
-        <div>
-            <div class="card">
-                <div class="card-title">Short</div>
-                <table class="tablafija">
-                    <tbody>
-                        <tr><td></td><td>Recorrido %</td><td>TP esperado</td><td>Qty USDT</td><td>Qty Var</td></tr>
-                        <tr><td>Po1</td><td><span class="fds_recorrido_perc1"></span></td><td><span class="fds_PF_esperado1"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar1"></span></td></tr>
-                        <tr><td>Po2</td><td><span class="fds_recorrido_perc2"></span></td><td><span class="fds_PF_esperado2"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar2"></span></td></tr>
-                        <tr><td>Po3</td><td><span class="fds_recorrido_perc3"></span></td><td><span class="fds_PF_esperado3"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar3"></span></td></tr>
-                        <tr><td>Po4</td><td><span class="fds_recorrido_perc4"></span></td><td><span class="fds_PF_esperado4"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar4"></span></td></tr>
-                        <tr><td>Po5</td><td><span class="fds_recorrido_perc5"></span></td><td><span class="fds_PF_esperado5"></span></td><td><span class="fds_Qty_USDT_SubPosicion"></span></td><td><span class="fds_Qty_mVar5"></span></td></tr>
-                        <tr><td></td><td><span class="fds_sum_recorrrido_perc"></span></td><td><span class="fds_sum_PF_esperado"></span></td><td><span class="fds_sum_Qty_USDT_SubPosicion"></span></td><td><span class="fds_sum_Qty_mVar"></span></td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Long</div>
-                <table class="tablafija">
-                    <tbody>
-                        <tr><td></td><td>Recorrido %</td><td>TP esperado</td><td>Qty USDT</td><td>Qty Var</td></tr>
-                        <tr><td>Po1</td><td><span class="fdl_recorrido_perc1"></span></td><td><span class="fdl_PF_esperado1"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar1"></span></td></tr>
-                        <tr><td>Po2</td><td><span class="fdl_recorrido_perc2"></span></td><td><span class="fdl_PF_esperado2"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar2"></span></td></tr>
-                        <tr><td>Po3</td><td><span class="fdl_recorrido_perc3"></span></td><td><span class="fdl_PF_esperado3"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar3"></span></td></tr>
-                        <tr><td>Po4</td><td><span class="fdl_recorrido_perc4"></span></td><td><span class="fdl_PF_esperado4"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar4"></span></td></tr>
-                        <tr><td>Po5</td><td><span class="fdl_recorrido_perc5"></span></td><td><span class="fdl_PF_esperado5"></span></td><td><span class="fdl_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_Qty_mVar5"></span></td></tr>
-                        <tr><td></td><td><span class="fdl_sum_recorrrido_perc"></span></td><td><span class="fdl_sum_PF_esperado"></span></td><td><span class="fdl_sum_Qty_USDT_SubPosicion"></span></td><td><span class="fdl_sum_Qty_mVar"></span></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <!-- COL 3: Contabilidad -->
         <div>
@@ -278,9 +264,9 @@
                 <div class="card-title">Contabilidad</div>
                 <table class="tablafija">
                     <tbody>
-                        <tr><td>Balance Actual</td><td><span class="sd_Bal_Pos"></span></td><td>PF</td><td><span class="ps_input_pf"></span></td></tr>
-                        <tr><td>Valor Puro Tot</td><td><span class="sd_ValorPuro_Tot"></span></td><td>Qty min</td><td><span class="ps_Qty_min"></span></td></tr>
-                        <tr><td>Perd Max</td><td><span class="sd_perd_esperada"></span></td><td>F. Inicio</td><td><span class="sd_fechainicio"></span></td></tr>
+                        <tr><td>Balance Actual</td><td><span class="sd_Bal_Pos"></span></td><td>-</td><td><span class=""></span></td></tr>
+                        <tr><td>-</td><td><span class="sd_ValorPuro_Tot"></span></td><td>Qty min</td><td><span class="fd_Qty_min"></span></td></tr>
+                        <tr><td>-</td><td><span class="sd_perd_esperada"></span></td><td>F. Inicio</td><td><span class="fd_fechainicio"></span></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -288,11 +274,6 @@
 
     </div>
 
-    <!-- TABLA UNIFICADA DE NIVELES -->
-    <div class="card">
-        <div class="card-title">Niveles</div>
-        <div id="tabla-niveles-container"></div>
-    </div>
 
     <!-- TABLA CSV MOVIMIENTOS -->
     <div class="card">
@@ -313,101 +294,24 @@
     function cargarDatosEstaticos() {
         $.getJSON(`/dat_fixed?ticker=${ticker}`, function(data) {
 
-            $('.limite_inferior').text(data.limite_inferior); 
-            $('.limite_superior').text(data.limite_superior); 
-            $('.sd_fechainicio').text(data.sd_fechainicio);
-            $('.ps_input_pf').text(data.ps_input_pf);
-            $('.sd_perd_esperada').text(data.sd_perd_esperada);
-            $('.ps_Qty_min').text(data.ps_Qty_min);
-
-            $('.fds_Po1_valor').text(data.fds_Po1_valor);    
-            $('.fds_Po2_valor').text(data.fds_Po2_valor);
-            $('.fds_Po3_valor').text(data.fds_Po3_valor);
-            $('.fds_Po4_valor').text(data.fds_Po4_valor);
-            $('.fds_Po5_valor').text(data.fds_Po5_valor);  
-
-            $('.fdl_Po1_valor').text(data.fdl_Po1_valor);       
-            $('.fdl_Po2_valor').text(data.fdl_Po2_valor);  
-            $('.fdl_Po3_valor').text(data.fdl_Po3_valor);  
-            $('.fdl_Po4_valor').text(data.fdl_Po4_valor);  
-            $('.fdl_Po5_valor').text(data.fdl_Po5_valor);  
-
-            $('.fds_step1_valor').text(data.fds_step1_valor);  
-            $('.fds_step2_valor').text(data.fds_step2_valor);   
-            $('.fds_step3_valor').text(data.fds_step3_valor);   
-            $('.fds_step4_valor').text(data.fds_step4_valor);   
-            $('.fds_step5_valor').text(data.fds_step5_valor);   
-
-            $('.fdl_step1_valor').text(data.fdl_step1_valor);  
-            $('.fdl_step2_valor').text(data.fdl_step2_valor);   
-            $('.fdl_step3_valor').text(data.fdl_step3_valor);   
-            $('.fdl_step4_valor').text(data.fdl_step4_valor);   
-            $('.fdl_step5_valor').text(data.fdl_step5_valor);   
-
-            $('.input_niveles').text(data.input_niveles);
-            $('.percentsl').text(data.percentsl);
-
-            $('.fds_recorrido_perc1').text(data.fds_recorrido_perc1);
-            $('.fds_recorrido_perc2').text(data.fds_recorrido_perc2);
-            $('.fds_recorrido_perc3').text(data.fds_recorrido_perc3);
-            $('.fds_recorrido_perc4').text(data.fds_recorrido_perc4);
-            $('.fds_recorrido_perc5').text(data.fds_recorrido_perc5);
-            $('.fds_sum_recorrrido_perc').text(data.fds_sum_recorrrido_perc);
-
-            $('.fdl_recorrido_perc1').text(data.fdl_recorrido_perc1);
-            $('.fdl_recorrido_perc2').text(data.fdl_recorrido_perc2);
-            $('.fdl_recorrido_perc3').text(data.fdl_recorrido_perc3);
-            $('.fdl_recorrido_perc4').text(data.fdl_recorrido_perc4);
-            $('.fdl_recorrido_perc5').text(data.fdl_recorrido_perc5);
-            $('.fdl_sum_recorrrido_perc').text(data.fdl_sum_recorrrido_perc);
-
-            $('.Qty_PosicionTotal').text(data.Qty_PosicionTotal);
-
-            $('.fds_PF_esperado1').text(data.fds_PF_esperado1);
-            $('.fds_PF_esperado2').text(data.fds_PF_esperado2);
-            $('.fds_PF_esperado3').text(data.fds_PF_esperado3);
-            $('.fds_PF_esperado4').text(data.fds_PF_esperado4);
-            $('.fds_PF_esperado5').text(data.fds_PF_esperado5);
-            $('.fds_sum_PF_esperado').text(data.fds_sum_PF_esperado);
-
-            $('.fds_Qty_USDT_SubPosicion').text(data.fds_Qty_USDT_SubPosicion);
-            $('.fds_sum_Qty_USDT_SubPosicion').text(data.fds_sum_Qty_USDT_SubPosicion);
-
-            $('.fdl_PF_esperado1').text(data.fdl_PF_esperado1);
-            $('.fdl_PF_esperado2').text(data.fdl_PF_esperado2);
-            $('.fdl_PF_esperado3').text(data.fdl_PF_esperado3);
-            $('.fdl_PF_esperado4').text(data.fdl_PF_esperado4);
-            $('.fdl_PF_esperado5').text(data.fdl_PF_esperado5);
-            $('.fdl_sum_PF_esperado').text(data.fdl_sum_PF_esperado);
+            $('.fd_fechainicio').text(data.fd_fechainicio);
+            $('.fd_Qty_min').text(data.fd_Qty_min);
+            $('.fd_r_1').text(data.fd_r_1);
+            $('.fd_r0').text(data.fd_r0);
+            $('.fd_r1').text(data.fd_r1);
+            $('.fd_r2').text(data.fd_r2);
+            $('.fd_perc1_r').text(data.fd_perc1_r);
+            $('.fd_perc1r').text(data.fd_perc1r);
+            $('.fd_perc2r').text(data.fd_perc2r);
             
-            $('.fdl_Qty_USDT_SubPosicion').text(data.fdl_Qty_USDT_SubPosicion);
-            $('.fdl_sum_Qty_USDT_SubPosicion').text(data.fdl_sum_Qty_USDT_SubPosicion);
+            $('.fd_type_pos').text(data.fd_type_pos);
 
-            $('.fds_Qty_mVar1').text(data.fds_Qty_mVar1);
-            $('.fds_Qty_mVar2').text(data.fds_Qty_mVar2);
-            $('.fds_Qty_mVar3').text(data.fds_Qty_mVar3);
-            $('.fds_Qty_mVar4').text(data.fds_Qty_mVar4);
-            $('.fds_Qty_mVar5').text(data.fds_Qty_mVar5);
-            $('.fds_sum_Qty_mVar').text(data.fds_sum_Qty_mVar);
+            $('.fd_Qty_mVar').text(data.fd_Qty_mVar);
+            $('.fd_Qty_r1').text(data.fd_Qty_r1);
+            $('.fd_Qty_r2').text(data.fd_Qty_r2);
+            $('.fd_Qty_ts').text(data.fd_Qty_ts);
+            
 
-            $('.fdl_Qty_mVar1').text(data.fdl_Qty_mVar1);
-            $('.fdl_Qty_mVar2').text(data.fdl_Qty_mVar2);
-            $('.fdl_Qty_mVar3').text(data.fdl_Qty_mVar3);
-            $('.fdl_Qty_mVar4').text(data.fdl_Qty_mVar4);
-            $('.fdl_Qty_mVar5').text(data.fdl_Qty_mVar5);
-            $('.fdl_sum_Qty_mVar').text(data.fdl_sum_Qty_mVar);
-
-            $('.fds_perc_SubSL1').text(data.fds_perc_SubSL1);
-            $('.fds_perc_SubSL2').text(data.fds_perc_SubSL2);
-            $('.fds_perc_SubSL3').text(data.fds_perc_SubSL3);
-            $('.fds_perc_SubSL4').text(data.fds_perc_SubSL4);
-            $('.fds_perc_SubSL5').text(data.fds_perc_SubSL5);
-
-            $('.fdl_perc_SubSL1').text(data.fdl_perc_SubSL1);
-            $('.fdl_perc_SubSL2').text(data.fdl_perc_SubSL2);
-            $('.fdl_perc_SubSL3').text(data.fdl_perc_SubSL3);
-            $('.fdl_perc_SubSL4').text(data.fdl_perc_SubSL4);
-            $('.fdl_perc_SubSL5').text(data.fdl_perc_SubSL5);
 
         });
     }
@@ -422,74 +326,13 @@
     }           
     setInterval(actualizarPrecio, 1000); 
     
-    function actualizarDatos() {
+    function actualizarDatos() { //Datos que se axctualizan cada determinado tiempo
         $.getJSON(`/datos?ticker=${ticker}`, function(data) {
 
-            $('.precio_banda').text(data.precio_banda);  
+
             $('.contador').text(data.contador);
 
-            $('.rts_control_pos1').text(data.rts_control_pos1);
-            $('.rts_control_pos2').text(data.rts_control_pos2);
-            $('.rts_control_pos3').text(data.rts_control_pos3);
-            $('.rts_control_pos4').text(data.rts_control_pos4);
-            $('.rts_control_pos5').text(data.rts_control_pos5);
-
-            $('.rtl_control_pos1').text(data.rtl_control_pos1);
-            $('.rtl_control_pos2').text(data.rtl_control_pos2);
-            $('.rtl_control_pos3').text(data.rtl_control_pos3);
-            $('.rtl_control_pos4').text(data.rtl_control_pos4);
-            $('.rtl_control_pos5').text(data.rtl_control_pos5);
-
-            $('.rts_control_TP1').text(data.rts_control_TP1);
-            $('.rts_control_TP2').text(data.rts_control_TP2);
-            $('.rts_control_TP3').text(data.rts_control_TP3);
-            $('.rts_control_TP4').text(data.rts_control_TP4);
-            $('.rts_control_TP5').text(data.rts_control_TP5);
-
-            $('.rtl_control_TP1').text(data.rtl_control_TP1);
-            $('.rtl_control_TP2').text(data.rtl_control_TP2);
-            $('.rtl_control_TP3').text(data.rtl_control_TP3);
-            $('.rtl_control_TP4').text(data.rtl_control_TP4);
-            $('.rtl_control_TP5').text(data.rtl_control_TP5);
-
-            $('.rts_PE_Pos1').text(data.rts_PE_Pos1);  
-            $('.rts_PE_Pos2').text(data.rts_PE_Pos2);  
-            $('.rts_PE_Pos3').text(data.rts_PE_Pos3);  
-            $('.rts_PE_Pos4').text(data.rts_PE_Pos4);  
-            $('.rts_PE_Pos5').text(data.rts_PE_Pos5);  
-
-            $('.rtl_PE_Pos1').text(data.rtl_PE_Pos1);  
-            $('.rtl_PE_Pos2').text(data.rtl_PE_Pos2);  
-            $('.rtl_PE_Pos3').text(data.rtl_PE_Pos3);  
-            $('.rtl_PE_Pos4').text(data.rtl_PE_Pos4);  
-            $('.rtl_PE_Pos5').text(data.rtl_PE_Pos5);  
-
-            $('.rts_TP_Pos1').text(data.rts_TP_Pos1);  
-            $('.rts_TP_Pos2').text(data.rts_TP_Pos2);  
-            $('.rts_TP_Pos3').text(data.rts_TP_Pos3);  
-            $('.rts_TP_Pos4').text(data.rts_TP_Pos4);  
-            $('.rts_TP_Pos5').text(data.rts_TP_Pos5);  
-
-            $('.rtl_TP_Pos1').text(data.rtl_TP_Pos1);  
-            $('.rtl_TP_Pos2').text(data.rtl_TP_Pos2);  
-            $('.rtl_TP_Pos3').text(data.rtl_TP_Pos3);  
-            $('.rtl_TP_Pos4').text(data.rtl_TP_Pos4);  
-            $('.rtl_TP_Pos5').text(data.rtl_TP_Pos5);  
-
-            $('.rts_Qty_USDT_SubPosicion1').text(data.rts_Qty_USDT_SubPosicion1);
-            $('.rts_Qty_USDT_SubPosicion2').text(data.rts_Qty_USDT_SubPosicion2);
-            $('.rts_Qty_USDT_SubPosicion3').text(data.rts_Qty_USDT_SubPosicion3);
-            $('.rts_Qty_USDT_SubPosicion4').text(data.rts_Qty_USDT_SubPosicion4);
-            $('.rts_Qty_USDT_SubPosicion5').text(data.rts_Qty_USDT_SubPosicion5);
-
-            $('.rtl_Qty_USDT_SubPosicion1').text(data.rtl_Qty_USDT_SubPosicion1);
-            $('.rtl_Qty_USDT_SubPosicion2').text(data.rtl_Qty_USDT_SubPosicion2);
-            $('.rtl_Qty_USDT_SubPosicion3').text(data.rtl_Qty_USDT_SubPosicion3);
-            $('.rtl_Qty_USDT_SubPosicion4').text(data.rtl_Qty_USDT_SubPosicion4);
-            $('.rtl_Qty_USDT_SubPosicion5').text(data.rtl_Qty_USDT_SubPosicion5);
-           
-            $('.sd_ValorPuro_Tot').text(data.sd_ValorPuro_Tot);
-            $('.sd_Bal_Pos').text(data.sd_Bal_Pos);
+ 
         })
     }           
     setInterval(actualizarDatos, 5000); 
@@ -593,101 +436,7 @@ function cargarCSV() {
 cargarCSV();
 </script>
 
-<script>
-    function generarTablaNiveles() {
-      const niveles = [1, 2, 3, 4, 5];
 
-      const colHeaders = [];
-      niveles.forEach(i => colHeaders.push(`N${i}S`));
-      niveles.forEach(i => colHeaders.push(`N${i}L`));
-
-      const filas = [
-        {
-          label: 'SL (fds)',
-          celdas: function(side, i) {
-            if (side === 'S') return i !== 1 ? `fds_step${i-1}_valor` : 'precio_banda';
-            else return i !== 1 ? `fdl_step${i-1}_valor` : 'precio_banda';
-          }
-        },
-        {
-          label: 'Po (fds)',
-          celdas: function(side, i) {
-            return side === 'S' ? `fds_Po${i}_valor` : `fdl_Po${i}_valor`;
-          }
-        },
-        {
-          label: 'PE (rts)',
-          celdas: function(side, i) {
-            return side === 'S' ? `rts_PE_Pos${i}` : `rtl_PE_Pos${i}`;
-          }
-        },
-        {
-          label: 'TP (fds)',
-          celdas: function(side, i) {
-            return side === 'S' ? `fds_step${i}_valor` : `fdl_step${i}_valor`;
-          }
-        },
-        {
-          label: 'TP (rts)',
-          celdas: function(side, i) {
-            return side === 'S' ? `rts_TP_Pos${i}` : `rtl_TP_Pos${i}`;
-          }
-        },
-        {
-          label: 'Estado',
-          celdas: function(side, i) {
-            return side === 'S' ? `rts_control_pos${i}` : `rtl_control_pos${i}`;
-          }
-        },
-        {
-          label: 'Est TP',
-          celdas: function(side, i) {
-            return side === 'S' ? `rts_control_TP${i}` : `rtl_control_TP${i}`;
-          }
-        },
-        {
-          label: 'QtyMVar (fds)',
-          celdas: function(side, i) {
-            return side === 'S' ? `fds_Qty_mVar${i}` : `fdl_Qty_mVar${i}`;
-          }
-        },
-        {
-          label: 'QtyUSDT (rts)',
-          celdas: function(side, i) {
-            return side === 'S' ? `rts_Qty_USDT_SubPosicion${i}` : `rtl_Qty_USDT_SubPosicion${i}`;
-          }
-        },
-        {
-          label: '% SubSL (fds)',
-          celdas: function(side, i) {
-            return side === 'S' ? `fds_perc_SubSL${i}` : `fdl_perc_SubSL${i}`;
-          }
-        }
-      ];
-
-      let html = '<table class="tablafija"><thead><tr><th></th>';
-      colHeaders.forEach(h => { html += `<th>${h}</th>`; });
-      html += '</tr></thead><tbody>';
-
-      filas.forEach(fila => {
-        html += `<tr><td>${fila.label}</td>`;
-        niveles.forEach(i => {
-          const cls = fila.celdas('S', i);
-          html += `<td><span class="${cls}"></span></td>`;
-        });
-        niveles.forEach(i => {
-          const cls = fila.celdas('L', i);
-          html += `<td><span class="${cls}"></span></td>`;
-        });
-        html += '</tr>';
-      });
-
-      html += '</tbody></table>';
-      return html;
-    }
-
-    document.getElementById("tabla-niveles-container").innerHTML = generarTablaNiveles();
-</script>
 
 </body>
 </html>

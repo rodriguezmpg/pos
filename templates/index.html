@@ -169,16 +169,11 @@
             <td>Abrir</td>
             <td>PE</td>
             <td>PA</td>
-            <td>LS</td>
-            <td>LI</td>
-            <td>Act SUP</td>
-            <td>Act Inf</td>
             <td>%</td>
+            <td>% Rdo.</td>
             <td>V. Total</td>
-            <td>Niveles</td>
             <td>Posicion</td>
             <td>Fecha Inicio</td>
-            <td>Simulacion</td>
             <td>Detener</td>
         </thead>
         <tbody id="tbody-simbolos"></tbody>
@@ -205,18 +200,13 @@ function generarFilasTabla(simbolos) {
             <td><span id="estado-${simbolo}"></span></td>
              <td><button type="button" onclick="enviarGeneral('${simbolo}', 'iniciar')">INICIAR</button></td>
             <td><button name="button" onclick="window.open('/main?ticker=${simbolo}', '_blank')">ABRIR</button></td>
-            <td><span id="${simbolo}_precio_banda"></span></td>
+            <td><span id="${simbolo}_fd_r0"></span></td>
             <td><span id="${simbolo}_Cprecio"></span></td>
-            <td><span id="${simbolo}_limite_superior"></span></td>
-            <td><span id="${simbolo}_limite_inferior"></span></td>
-            <td><span id="${simbolo}_act_sup"></span></td>
-            <td><span id="${simbolo}_act_inf"></span></td>
+            <td><span id="${simbolo}_percentsl"></span></td>
             <td><span id="${simbolo}_percentsl"></span></td>
             <td><span id="${simbolo}_sd_ValorPuro_Tot"></span></td>
-            <td><span id="${simbolo}_input_niveles"></span></td>
             <td><span id="${simbolo}_sd_posicion"></span></td>
             <td><span id="${simbolo}_sd_fechainicio"></span></td>
-            <td><span id="${simbolo}_ps_simulacion"></span></td>
             <td><button name="button" onclick="window.location.href='/stopsocket?ticker=${simbolo}'">DETENER</button></td>
         </tr>
         `;
