@@ -37,16 +37,11 @@ def Grid(ps, fd, rt):
         fd.control = False
         fd.mensaje = 'Cantidad minima no aceptada'
 
-        
     
-
-    print(f"Grid Calculada - fd.type_pos: {fd.type_pos} | fd.valor_r: {fd.valor_r} | fd.perc2r: {fd.perc2r} | fd.r_1: {fd.r_1} | fd.r0: {fd.r0} | fd.r1: {fd.r1} | fd.r2: {fd.r2}")
-   
     '''
     - Comprar primero con Qty min si la fracmentacion se puede si no que no abra nada y tire mensaje.
     - Tiene que abrir las cuatro posiciones, y cuando se alcanze una ver como cancelar la otra, 
     asi como cuando alanza r1 borrrar el SL y poner el BE. 
-
     '''
     
 # async def POs(i, ps, fds, fdl, rts, rtl, sd, symbol):

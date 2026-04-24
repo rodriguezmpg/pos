@@ -130,7 +130,7 @@ def start_trading():
     ps.p2r = float(request.form.get('p2r'))
     
     
-    if (request.form.get('send')) == 'iniciar': main_loop.iniciar_socket_async(ticker)
+    main_loop.iniciar_socket_async(ticker)
 
     return Response(status=204) 
 
