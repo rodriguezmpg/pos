@@ -50,41 +50,19 @@ async def restart_symbol(symbol, estado, sl, timeop, pentrada, psalida, vcierre,
    
         
 
-def restart_symbol_backtest(symbol, estado, sl, timeop, pentrada, psalida, vcierre, balance, secuencia, resultado):
-    global bt
-    
-    timeclose = bt.datetimerow
-    Data_csv = [
-        [
-        bt.symbol,
-        estado,
-        sl,
-        timeop,
-        timeclose,
-        pentrada,
-        psalida,
-        f"{vcierre  :.2f}", 
-        f"{balance :.2f}",
-        f"{resultado :.2f}",
-        secuencia
-        ]
-    ]
-    bt.contador_procesos += 1
-    
-    bt.SumaBalances +=  resultado
+data = requests.get("https://fapi.binance.com/fapi/v1/exchangeInfo").json()
+_exchange_info_cache = None
 
-    if estado == "TP5L" or estado == "TP5S": bt.TP_Cont += 1      
-    elif estado == "SL1L" or estado == "SL1S": bt.SL_Cont += 1
-    elif estado == "BE": bt.BE_Cont += 1
-  
-    with open(bt.url_analisis, mode='a', newline='', encoding='utf-8') as archivo: 
-        escritor_csv = csv.writer(archivo)
-        escritor_csv.writerows(Data_csv)   
-        
-    write_csv_bt([['0', 'RESTART']], bt.symbol)
+def get_exchange_info(): #Para que descague los datos para Qtymin y obtenerdecimales una sola vez.
+    global _exchange_info_cache
 
-    bt.reinicio = True
-    bt.activadores = False
+    if _exchange_info_cache is None:
+        url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        _exchange_info_cache = resp.json()
+
+    return _exchange_info_cache
 
 
 def Qty_min(symbol, currentprice):
@@ -92,7 +70,7 @@ def Qty_min(symbol, currentprice):
     Devuelve solo la cantidad mínima requerida para abrir una orden,
     basada en MIN_NOTIONAL y respetando LOT_SIZE (minQty/stepSize).
     """
-    data = requests.get("https://fapi.binance.com/fapi/v1/exchangeInfo").json()
+    data = get_exchange_info()
     symbol = symbol.upper()
 
     min_notional = None
@@ -118,54 +96,31 @@ def Qty_min(symbol, currentprice):
 
 
 def obtenerdecimales(symbol: str):
-    """
-    Devuelve (decimalesprecio, decimalescantidad) para un símbolo de Binance Futures USDT-M.
-
-    Parámetro:
-        symbol (str): por ejemplo 'DOGEUSDT', 'BTCUSDT', 'CRVUSDT'
-
-    Retorna:
-        (decimalesprecio:int, decimalescantidad:int)
-
-    Lanza:
-        ValueError si el símbolo no existe o si está vacío.
-        requests.HTTPError si falla la petición HTTP.
-    """
     if not symbol:
         raise ValueError("Símbolo vacío.")
+
     sym = symbol.upper().strip()
+    data = get_exchange_info()
 
-    # Cache simple: descarga exchangeInfo solo la primera vez
-    if not hasattr(obtenerdecimales, "_cache_exchange_info"):
-        url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-        obtenerdecimales._cache_exchange_info = resp.json()
-
-    data = obtenerdecimales._cache_exchange_info
     symbols = data.get("symbols", [])
     info = next((s for s in symbols if s.get("symbol") == sym), None)
+
     if info is None:
         raise ValueError(f"Símbolo no encontrado en Binance Futures USDT-M: {sym}")
 
-    # Filtros
     price_filter = next((f for f in info["filters"] if f["filterType"] == "PRICE_FILTER"), {})
-    lot_size     = next((f for f in info["filters"] if f["filterType"] == "LOT_SIZE"), {})
+    lot_size = next((f for f in info["filters"] if f["filterType"] == "LOT_SIZE"), {})
 
     tick_size = price_filter.get("tickSize", "")
     step_size = lot_size.get("stepSize", "")
 
-    # Cuenta decimales de tick_size
     if tick_size and "." in tick_size:
-        parte_decimal_tick = tick_size.split(".")[1].rstrip("0")
-        decimalesprecio = len(parte_decimal_tick)
+        decimalesprecio = len(tick_size.split(".")[1].rstrip("0"))
     else:
         decimalesprecio = 0
 
-    # Cuenta decimales de step_size
     if step_size and "." in step_size:
-        parte_decimal_step = step_size.split(".")[1].rstrip("0")
-        decimalescantidad = len(parte_decimal_step)
+        decimalescantidad = len(step_size.split(".")[1].rstrip("0"))
     else:
         decimalescantidad = 0
 

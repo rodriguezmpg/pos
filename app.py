@@ -129,10 +129,10 @@ def start_trading():
     ps.USDT1r = float(request.form.get('USDT1r'))
     ps.p2r = float(request.form.get('p2r'))
     
-    
-    if (request.form.get('send')) == 'iniciar': main_loop.iniciar_socket_async(ticker)
+    if (request.form.get('send')) == 'iniciar':
+        main_loop.iniciar_socket_async(ticker)
 
-    return Response(status=204) 
+    return Response(status=204)
 
 
 
