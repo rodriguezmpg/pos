@@ -1,6 +1,5 @@
 from datetime import datetime
 import csv
-import requests
 import math
 import time
 import requests
@@ -50,7 +49,6 @@ async def restart_symbol(symbol, estado, sl, timeop, pentrada, psalida, vcierre,
    
         
 
-data = requests.get("https://fapi.binance.com/fapi/v1/exchangeInfo").json()
 _exchange_info_cache = None
 
 def get_exchange_info(): #Para que descague los datos para Qtymin y obtenerdecimales una sola vez.
@@ -127,41 +125,5 @@ def obtenerdecimales(symbol: str):
     return decimalesprecio, decimalescantidad
 
 
-def soporte_resistencia(df, index_actual, bt):
-    fecha_actual = df.loc[index_actual, 'datetime']
-    dia = fecha_actual.date()
 
-    if bt.sr_dia_actual == dia:
-        return
-
-    bt.sr_dia_actual = dia
-
-    if bt.sr_primer_dia is None:
-        bt.sr_primer_dia = dia
-
-    if (dia - bt.sr_primer_dia).days < bt.sr_dias_lookback:
-        return
-
-    fecha_limite = fecha_actual - pd.Timedelta(days=bt.sr_dias_lookback)
-
-    mascara = (df['datetime'] >= fecha_limite) & (df['datetime'] < fecha_actual)
-    nuevo_soporte = float(df.loc[mascara, 'low'].min())
-    nueva_resistencia = float(df.loc[mascara, 'high'].max())
-    fecha_str = fecha_actual.strftime("%Y-%m-%d %H:%M")
-
-    if bt.sr_soporte is None:
-        bt.sr_soporte = nuevo_soporte
-        bt.sr_resistencia = nueva_resistencia
-        #print(f"[ACTIVADORES COLOCADOS] {fecha_str} | Soporte: {bt.sr_soporte} | Resistencia: {bt.sr_resistencia}")
-        return
-
-    if nuevo_soporte != bt.sr_soporte:
-        anterior = bt.sr_soporte
-        bt.sr_soporte = nuevo_soporte
-        #print(f"[NUEVO SOPORTE] {fecha_str} | {anterior} → {bt.sr_soporte}")
-
-    if nueva_resistencia != bt.sr_resistencia:
-        anterior = bt.sr_resistencia
-        bt.sr_resistencia = nueva_resistencia
-        #print(f"[NUEVA RESISTENCIA] {fecha_str} | {anterior} → {bt.sr_resistencia}")
 

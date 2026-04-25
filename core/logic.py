@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 
 from core.dbfunc import write_db
 from core.utils import restart_symbol, Qty_min
-from core.orders import close_total, order_market, get_order_info
+from core.orders import close_total, order_market, get_order_info, order_tp_market, order_sl_stop_market
 
 
-def Grid(ps, fd, rt):
+async def Grid(symbol, ps, fd, rt):
     
     fd.perc2r = round(abs(ps.p2r - fd.r0) / fd.r0 * 100,4)
     fd.perc1r = round((fd.perc2r / 2),4)
@@ -22,12 +22,15 @@ def Grid(ps, fd, rt):
         fd.r_1 = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)
         fd.r1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)
         fd.r2 = round(fd.r0 * (1 + (fd.perc2r / 100)), fd.dec_precio)
-
+        side_open = 'BUY'
+        side_close = 'SELL'
     else:
         fd.type_pos = 'SHORT'
         fd.r_1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)      
         fd.r1  = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)     
         fd.r2  = round(fd.r0 * (1 - (fd.perc2r / 100)), fd.dec_precio)
+        side_open = 'SELL'
+        side_close = 'BUY'
 
 
     fd.Qty_mVar = round(ps.USDT1r / (fd.r0 - fd.r_1), fd.dec_qty)
@@ -43,10 +46,17 @@ def Grid(ps, fd, rt):
     print(fd.pnl1r)
     if (fd.Qty_r2 < fd.Qty_min):
         fd.control = False
-        USDTmin = round(fd.Qty_min * (fd.r0 - fd.r_1),2)
-        fd.mensaje = f'Cantidad minima no aceptada r1 {USDTmin}'
-
+        USDTmin = round((fd.Qty_min * (fd.r0 - fd.r_1))*4,2)
+        fd.mensaje = f'Cantidad minima no aceptada r1: {USDTmin}'
     
+    if fd.control:
+        id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
+        id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, fd.r1)
+        id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, fd.r2)
+        id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.pnl1_r)
+        
+
+
     '''
     - Comprar primero con Qty min si la fracmentacion se puede si no que no abra nada y tire mensaje.
     - Tiene que abrir las cuatro posiciones, y cuando se alcanze una ver como cancelar la otra, 

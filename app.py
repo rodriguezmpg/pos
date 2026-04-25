@@ -116,7 +116,6 @@ async def detener_socket():
 
     return Response(status=204) 
 
-
 @app.route('/socket_status')
 def socket_status():
     return main_loop.symbol_status()
@@ -134,8 +133,11 @@ def start_trading():
     ps.USDT1r = float(request.form.get('USDT1r'))
     ps.p2r = float(request.form.get('p2r'))
     
-    if (request.form.get('send')) == 'iniciar':
-        main_loop.iniciar_socket_async(ticker)
+    
+    if (request.form.get('send')) == 'iniciar': main_loop.iniciar_socket_async(ticker)
+
+    return Response(status=204) 
+
 
     return Response(status=204)
 
@@ -193,24 +195,11 @@ def analisis_data():
 
 
 
-
-
-
-
 if __name__ == '__main__':
-    # t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
-    # t.daemon = True
-    # t.start()
-    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
     t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
     t.daemon = True
     t.start()
-
-    if main_loop.esperar_event_loop():
-        main_loop.iniciar_combined_stream_async()
-    else:
-        print("[ERROR] No se pudo iniciar el event loop para el combined stream")
-
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
+
 
 
