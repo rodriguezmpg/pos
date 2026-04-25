@@ -41,6 +41,7 @@ def dat_fixed():
     return jsonify({
         'fd_fechainicio': fd.fechainicio,
         'fd_Qty_min': fd.Qty_min,
+        'ps_USDT1r': ps.USDT1r,
         'fd_r_1': fd.r_1,
         'fd_r0': fd.r0,
         'fd_r1': fd.r1,
@@ -53,6 +54,10 @@ def dat_fixed():
         'fd_Qty_r1': fd.Qty_r1,
         'fd_Qty_r2': fd.Qty_r2,
         'fd_Qty_ts': fd.Qty_ts,
+        'fd_pnl1_r': fd.pnl1_r,
+        'fd_pnl1r': fd.pnl1r,
+        'fd_pnl2r': fd.pnl2r,
+        'fd_mensaje': fd.mensaje
              
     })
 
@@ -193,9 +198,19 @@ def analisis_data():
 
 
 if __name__ == '__main__':
+    # t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
+    # t.daemon = True
+    # t.start()
+    # app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
     t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
     t.daemon = True
     t.start()
+
+    if main_loop.esperar_event_loop():
+        main_loop.iniciar_combined_stream_async()
+    else:
+        print("[ERROR] No se pudo iniciar el event loop para el combined stream")
+
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
 
 

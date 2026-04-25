@@ -14,30 +14,37 @@ def Grid(ps, fd, rt):
     fd.perc2r = round(abs(ps.p2r - fd.r0) / fd.r0 * 100,4)
     fd.perc1r = round((fd.perc2r / 2),4)
     fd.perc1_r = round(-fd.perc1r,4)
+
+    fd.mensaje = 'Aceptado'
     
     if fd.r0 < ps.p2r:
         fd.type_pos = 'LONG'
         fd.r_1 = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)
         fd.r1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)
         fd.r2 = round(fd.r0 * (1 + (fd.perc2r / 100)), fd.dec_precio)
+
     else:
         fd.type_pos = 'SHORT'
         fd.r_1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)      
         fd.r1  = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)     
         fd.r2  = round(fd.r0 * (1 - (fd.perc2r / 100)), fd.dec_precio)
 
-    fd.Qty_mVar = round(ps.USDT1r / (fd.r0 * fd.perc1r), fd.dec_qty)
+
+    fd.Qty_mVar = round(ps.USDT1r / (fd.r0 - fd.r_1), fd.dec_qty)
 
     fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
     fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
     fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
 
-    # fd.pnl1r = 
+    fd.pnl1_r = round(((fd.r_1 - fd.r0 )* fd.Qty_mVar),4)
+    fd.pnl1r = round(((fd.r1 - fd.r0 )* fd.Qty_r1),4)
+    fd.pnl2r = round(((fd.r2 - fd.r0 )* fd.Qty_r2),4)
     
-
+    print(fd.pnl1r)
     if (fd.Qty_r2 < fd.Qty_min):
         fd.control = False
-        fd.mensaje = 'Cantidad minima no aceptada'
+        USDTmin = round(fd.Qty_min * (fd.r0 - fd.r_1),2)
+        fd.mensaje = f'Cantidad minima no aceptada r1 {USDTmin}'
 
     
     '''

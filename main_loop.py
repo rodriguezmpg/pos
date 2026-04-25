@@ -8,6 +8,7 @@ import json
 import os
 from dotenv import load_dotenv
 import traceback
+import time
 
 from core.classes import DataPost, FixedData, RealTime, OrderError
 from core.logic import Grid, Steps_L, Steps_S
@@ -68,8 +69,7 @@ async def calculos(symbol, datasocket):
         fd.r0 = rt.current_price
         fd.fechainicio = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         fd.dec_precio, fd.dec_qty = await asyncio.to_thread(obtenerdecimales, symbol)
-        qty_min = await asyncio.to_thread(Qty_min, symbol, rt.current_price)
-        fd.Qty_min = round(qty_min, fd.dec_qty)
+        fd.Qty_min = await asyncio.to_thread(Qty_min, symbol, rt.current_price)
         fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         Grid(ps, fd, rt)
 
@@ -99,8 +99,6 @@ async def start_combined_socket():
     streams = "/".join(f"{symbol}@ticker" for symbol in symbol_list)
     url = f"wss://fstream.binance.com/stream?streams={streams}"
 
-    print(f"[SOCKET] Combined stream iniciado - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')}")
-    print(f"[SOCKET] URL combined stream con {len(symbol_list)} símbolos")
 
     while True:
         try:
@@ -112,7 +110,8 @@ async def start_combined_socket():
                 close_timeout=5,
             ) as websocket:
 
-                print(f"[SOCKET] Combined stream CONECTADO - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')}")
+                print(f"[SOCKET] Combined stream iniciado - con {len(symbol_list)} símbolos - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')}")
+
 
                 while True:
                     try:
@@ -125,6 +124,12 @@ async def start_combined_socket():
                         if not symbol:
                             continue
 
+                        # Actualiza el precio SIEMPRE, aunque el símbolo no esté activo.
+                        # Esto permite tener precios listos desde que inicia el programa.
+                        ps, fd, rt = get_vars(symbol)
+                        rt.current_price = float(payload["c"])
+
+                        # Solo ejecuta grilla / lógica para símbolos activados.
                         if symbol not in active_symbols:
                             continue
 
@@ -158,18 +163,57 @@ async def start_combined_socket():
 
 def iniciar_asyncio_loop():
     global event_loop
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
     event_loop = loop
     loop.run_forever()
+
+
+def esperar_event_loop(timeout=5):
+    inicio = datetime.now(timezone.utc)
+
+    while event_loop is None:
+        if (datetime.now(timezone.utc) - inicio).total_seconds() > timeout:
+            return False
+
+        # Esto corre en el thread principal, no dentro del event_loop.
+        import time
+        time.sleep(0.05)
+
+    return True
+
+
+def iniciar_combined_stream_async():
+    global combined_task, event_loop
+
+    if event_loop is None:
+        print(f"[ERROR] Event loop no está inicializado - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+        return
+
+    if combined_task is not None and not combined_task.done():
+        print(f"[SOCKET] Combined stream ya está activo - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+        return
+
+    combined_task = asyncio.run_coroutine_threadsafe(start_combined_socket(), event_loop)
 
 
 def symbol_status():
     return {symbol: (symbol in active_symbols) for symbol in symbol_list}
 
 
+async def inicializar_simbolo_si_hay_precio(symbol):
+    ps, fd, rt = get_vars(symbol)
+
+    if rt.current_price and rt.current_price > 0:
+        await calculos(symbol, {"c": rt.current_price})
+    else:
+        print(f"[SOCKET] {symbol} activado pero todavía no hay precio disponible - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+
+
 def iniciar_socket_async(symbol):
-    global combined_task, event_loop, active_symbols, reinicio
+    global active_symbols, reinicio, event_loop
 
     symbol = symbol.lower().strip()
 
@@ -186,13 +230,13 @@ def iniciar_socket_async(symbol):
 
     print(f"[SOCKET] Símbolo activado: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
 
-    if combined_task is None or combined_task.done():
-        combined_task = asyncio.run_coroutine_threadsafe(start_combined_socket(), event_loop)
-        print(f"[SOCKET] Tarea combined stream enviada al loop - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+    # Si el combined stream ya guardó precio para este símbolo,
+    # calcula la grilla inmediatamente sin esperar el próximo mensaje.
+    asyncio.run_coroutine_threadsafe(inicializar_simbolo_si_hay_precio(symbol), event_loop)
 
 
 def detener_socket(symbol):
-    global combined_task, active_symbols
+    global active_symbols
 
     symbol = symbol.lower().strip()
 
@@ -201,12 +245,5 @@ def detener_socket(symbol):
         print(f"[SOCKET] Símbolo detenido: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
     else:
         print(f"[SOCKET] Símbolo no estaba activo: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-
-    if not active_symbols and combined_task is not None and not combined_task.done():
-        combined_task.cancel()
-        combined_task = None
-        print(f"[SOCKET] Combined stream detenido porque no quedan símbolos activos - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-
-
 
 

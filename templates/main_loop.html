@@ -200,8 +200,8 @@
                         <tr>
                             <td>P. Actual</td>
                             <td><span class="current_price"></span></td>
-                            <td>--</td>
-                            <td><span class=""></span></td>
+                            <td>V1R</td>
+                            <td><span class="ps_USDT1r"></span></td>
                         </tr>
                         <tr>
                             <td>PE</td>
@@ -228,30 +228,36 @@
                             <td>Valor</td>
                             <td>Dist.</td>
                             <td>Qty</td>
+                            <td>Pnl</td>
+
                         </tr>
                         <tr>
                             <td>r_1</td>
                             <td><span class="fd_r_1"></span></td>
                             <td><span class="fd_perc1_r"></span></td>
                             <td><span class="fd_Qty_mVar"></span></td>
+                            <td><span class="fd_pnl1_r"></span></td>
                         </tr>
                         <tr>
                             <td>r0</td>
                             <td><span class="fd_r0"></span></td>
                             <td><span class=""></span></td>
                             <td><span class="fd_Qty_mVar"></span></td>
+                            <td><span class=""></span></td>
                         </tr>
                         <tr>
                             <td>r1</td>
                             <td><span class="fd_r1"></span></td>
                             <td><span class="fd_perc1r"></span></td>
                             <td><span class="fd_Qty_r1"></span></td>
+                            <td><span class="fd_pnl1r"></span></td>
                         </tr>
                         <tr>
                             <td>r2</td>
                             <td><span class="fd_r2"></span></td>
                             <td><span class="fd_perc2r"></span></td>
                             <td><span class="fd_Qty_r2"></span></td>
+                            <td><span class="fd_pnl2r"></span></td>
                         </tr>
              </tbody>
                 </table>
@@ -270,6 +276,11 @@
                         <tr><td>-</td><td><span class="sd_perd_esperada"></span></td><td>F. Inicio</td><td><span class="fd_fechainicio"></span></td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+         <div>
+            <div class="card">
+                <div class="card-title"><span class="fd_mensaje"></span></div>
             </div>
         </div>
 
@@ -297,6 +308,7 @@
 
             $('.fd_fechainicio').text(data.fd_fechainicio);
             $('.fd_Qty_min').text(data.fd_Qty_min);
+            $('.ps_USDT1r').text(data.ps_USDT1r);
             $('.fd_r_1').text(data.fd_r_1);
             $('.fd_r0').text(data.fd_r0);
             $('.fd_r1').text(data.fd_r1);
@@ -311,6 +323,14 @@
             $('.fd_Qty_r1').text(data.fd_Qty_r1);
             $('.fd_Qty_r2').text(data.fd_Qty_r2);
             $('.fd_Qty_ts').text(data.fd_Qty_ts);
+
+            $('.fd_pnl1_r').text(data.fd_pnl1_r);
+            $('.fd_pnl1r').text(data.fd_pnl1r);
+            $('.fd_pnl2r').text(data.fd_pnl2r);
+
+            $('.fd_mensaje').text(data.fd_mensaje);
+
+            
             
 
 
