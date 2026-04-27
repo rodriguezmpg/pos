@@ -165,8 +165,8 @@ def movimientos():
     conn = sqlite3.connect("static/data/data.db")
     cur = conn.cursor()
     cur.execute("""
-        SELECT id_order, type, sl, pe, tp, pnl, qty_usdt, qvar,
-               pp, qty_total, balance, valor, comision, time, input_sl
+        SELECT id_order, type, pe, sl, r0, r1, r2, qty,
+               v1r, pnl, balance, comision, time
         FROM movimientos
         WHERE lower(trim(symbol)) = lower(trim(?))
         ORDER BY pk ASC

@@ -69,10 +69,10 @@ async def calculos(symbol, datasocket):
         fd.fechainicio = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         fd.dec_precio , fd.dec_qty = obtenerdecimales(symbol)
         fd.Qty_min = round(Qty_min(symbol, rt.current_price), fd.dec_qty)
-        fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
+        rt.fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         await Grid(symbol, ps, fd, rt)
         
-        print(f"Grillas listas para {symbol} - Simulacion = {ps.simulacion} - {fechayhora}")
+        print(f"Grillas listas para {symbol} - Simulacion = {ps.simulacion} - {rt.fechayhora}")
         
         reinicio[symbol] = False  
 

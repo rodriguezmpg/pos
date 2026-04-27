@@ -33,9 +33,9 @@ def write_db(Data_csv, symbol):
 
     cur.executemany("""
         INSERT INTO movimientos
-            (symbol, input_sl, id_order, type, sl, pe, tp, pnl,
-             qty_usdt, qvar, pp, qty_total, balance, valor, comision, time)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (symbol, id_order, type, pe, sl, r0, r1, r2, qty,
+               v1r, pnl, balance, comision, time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, filas)
 
     conn.commit()

@@ -7,7 +7,7 @@ class DataPost:
         self.USDT1r = 0
         self.simulacion = False
 
-        self.comision = 0.00
+        
         
 class FixedData: 
     def reset(self):
@@ -49,6 +49,8 @@ class RealTime:
         self.current_price = 0.00
         self.previous_price = 0.00
         self.fechayhora = None
+
+        self.comision = 0.00
 
 
 

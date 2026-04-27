@@ -46,7 +46,6 @@ async def Grid(symbol, ps, fd, rt):
 
         Data_db= [
             [
-            symbol,
             id_order_r0,
             fd.type_pos,
             round(fd.r0, fd.dec_precio),
@@ -54,63 +53,42 @@ async def Grid(symbol, ps, fd, rt):
             round(fd.r0, fd.dec_precio),
             round(fd.r1, fd.dec_precio),
             round(fd.r2, fd.dec_precio),
-            round(fd.Qty_mvar, fd.dec_qty),
+            round(fd.Qty_mVar, fd.dec_qty),
             ps.USDT1r,
             '',
             '',
             round(rt.comision, 8),
-            sd.fechayhora                     
+            rt.fechayhora                     
             ]
         ]
         write_db(Data_db, symbol)
         
 
-    if fd.r0 < ps.p2r: #long
-        splittage = PE_order - fd.r0
-        fd.r_1 = fd.r_1 + splittage
-        fd.r1 = fd.r1 + splittage
-        fd.r2 = fd.r2 + splittage
-    else: #short
-        splittage = fd.r0 - PE_order
-        fd.r_1 = fd.r_1 - splittage
-        fd.r1  = fd.r1 - splittage   
-        fd.r2  = fd.r2 - splittage
+        if fd.r0 < ps.p2r: #long
+            splittage = PE_order - fd.r0
+            fd.r_1 = round(fd.r_1 + splittage, fd.dec_precio)
+            fd.r1 = round(fd.r1 + splittage, fd.dec_precio)
+            fd.r2 = round(fd.r2 + splittage, fd.dec_precio)
+        else: #short
+            splittage = fd.r0 - PE_order
+            fd.r_1 = round(fd.r_1 - splittage, fd.dec_precio)
+            fd.r1  = round(fd.r1 - splittage, fd.dec_precio) 
+            fd.r2  = round(fd.r2 - splittage, fd.dec_precio)
 
-    fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
-    fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
-    fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
+        fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
+        fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
+        fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
 
-    fd.pnl1_r = round(((fd.r_1 - fd.r0 )* fd.Qty_mVar),4)
-    fd.pnl1r = round(((fd.r1 - fd.r0 )* fd.Qty_r1),4)
-    fd.pnl2r = round(((fd.r2 - fd.r0 )* fd.Qty_r2),4)
+        fd.pnl1_r = round(((fd.r_1 - fd.r0 )* fd.Qty_mVar),4)
+        fd.pnl1r = round(((fd.r1 - fd.r0 )* fd.Qty_r1),4)
+        fd.pnl2r = round(((fd.r2 - fd.r0 )* fd.Qty_r2),4)
 
-    if fd.control:
         id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, fd.r1)
         id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, fd.r2)
         id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.r_1)
 
     
-    sd.secuencia += wcsv.type_Pos + " | "
-    Data_csv = [
-        [
-        str(sd.id_posicion).zfill(11),
-        fd.type_pos,
-        round(rts.SL_Pos[i], sd.dec_precio),
-        round(rts.PE_Pos[i], sd.dec_precio),   
-        round(rts.TP_Pos[i], sd.dec_precio),
-        "",
-        round(rts.Qty_USDT_SubPosicion[i], 2),
-        round(Qty_mvar, sd.dec_qty),
-        round(rts.PE_prom, sd.dec_precio),
-        round(Qty_To_Open, sd.dec_qty),
-        round(sd.Bal_Pos,8),
-        round(sd.ValorPuro_Tot, 2),
-        round(rts.ComisionPo[i], 8),
-        sd.fechayhora                     
-        ]
-    ]
-    if bt.status: write_csv_bt(Data_csv, symbol)
-    else: write_db(Data_csv, symbol, ps.input_sl)
+
         
 
     
