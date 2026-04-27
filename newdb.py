@@ -7,19 +7,17 @@ cur.execute("""
 CREATE TABLE IF NOT EXISTS movimientos (
     pk          INTEGER PRIMARY KEY AUTOINCREMENT,
     symbol      TEXT    NOT NULL,
-    input_sl    INTEGER,
     id_order    TEXT,
     type        TEXT,
-    sl          REAL,
     pe          REAL,
-    tp          REAL,
+    sl          REAL,
+    r0          REAL,
+    r1          REAL,
+    r2          REAL,
+    qty         REAL,
+    v1r         REAL,
     pnl         REAL,
-    qty_usdt    REAL,
-    qvar        REAL,
-    pp          REAL,
-    qty_total   REAL,
     balance     REAL,
-    valor       REAL,
     comision    REAL,
     time        TEXT
 )
@@ -27,7 +25,6 @@ CREATE TABLE IF NOT EXISTS movimientos (
 
 # Índices para acelerar las consultas más comunes
 cur.execute("CREATE INDEX IF NOT EXISTS idx_symbol     ON movimientos(symbol)")
-cur.execute("CREATE INDEX IF NOT EXISTS idx_symbol_sl  ON movimientos(symbol, input_sl)")
 cur.execute("CREATE INDEX IF NOT EXISTS idx_time       ON movimientos(time)")
 
 

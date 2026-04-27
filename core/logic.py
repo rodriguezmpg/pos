@@ -32,8 +32,49 @@ async def Grid(symbol, ps, fd, rt):
         side_open = 'SELL'
         side_close = 'BUY'
 
-
     fd.Qty_mVar = round(ps.USDT1r / (fd.r0 - fd.r_1), fd.dec_qty)
+
+    if ((fd.Qty_mVar / 4) < fd.Qty_min):
+        fd.control = False
+        USDTmin = round((fd.Qty_min * (fd.r0 - fd.r_1))*4,2)
+        fd.mensaje = f'Cantidad minima no aceptada minimo: {USDTmin}'
+
+    if fd.control: #and r0 false.
+        id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
+        PE_order, pnl, Fee = await get_order_info(symbol, id_order_r0, max_attempts=10, wait_seconds=1) 
+        r0 = PE_order
+
+        Data_db= [
+            [
+            symbol,
+            id_order_r0,
+            fd.type_pos,
+            round(fd.r0, fd.dec_precio),
+            round(fd.r_1, fd.dec_precio),   
+            round(fd.r0, fd.dec_precio),
+            round(fd.r1, fd.dec_precio),
+            round(fd.r2, fd.dec_precio),
+            round(fd.Qty_mvar, fd.dec_qty),
+            ps.USDT1r,
+            '',
+            '',
+            round(rt.comision, 8),
+            sd.fechayhora                     
+            ]
+        ]
+        write_db(Data_db, symbol)
+        
+
+    if fd.r0 < ps.p2r: #long
+        splittage = PE_order - fd.r0
+        fd.r_1 = fd.r_1 + splittage
+        fd.r1 = fd.r1 + splittage
+        fd.r2 = fd.r2 + splittage
+    else: #short
+        splittage = fd.r0 - PE_order
+        fd.r_1 = fd.r_1 - splittage
+        fd.r1  = fd.r1 - splittage   
+        fd.r2  = fd.r2 - splittage
 
     fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
     fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
@@ -42,26 +83,36 @@ async def Grid(symbol, ps, fd, rt):
     fd.pnl1_r = round(((fd.r_1 - fd.r0 )* fd.Qty_mVar),4)
     fd.pnl1r = round(((fd.r1 - fd.r0 )* fd.Qty_r1),4)
     fd.pnl2r = round(((fd.r2 - fd.r0 )* fd.Qty_r2),4)
-    
-    print(fd.pnl1r)
-    if (fd.Qty_r2 < fd.Qty_min):
-        fd.control = False
-        USDTmin = round((fd.Qty_min * (fd.r0 - fd.r_1))*4,2)
-        fd.mensaje = f'Cantidad minima no aceptada r1: {USDTmin}'
-    
+
     if fd.control:
-        id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
         id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, fd.r1)
         id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, fd.r2)
-        id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.pnl1_r)
+        id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.r_1)
+
+    
+    sd.secuencia += wcsv.type_Pos + " | "
+    Data_csv = [
+        [
+        str(sd.id_posicion).zfill(11),
+        fd.type_pos,
+        round(rts.SL_Pos[i], sd.dec_precio),
+        round(rts.PE_Pos[i], sd.dec_precio),   
+        round(rts.TP_Pos[i], sd.dec_precio),
+        "",
+        round(rts.Qty_USDT_SubPosicion[i], 2),
+        round(Qty_mvar, sd.dec_qty),
+        round(rts.PE_prom, sd.dec_precio),
+        round(Qty_To_Open, sd.dec_qty),
+        round(sd.Bal_Pos,8),
+        round(sd.ValorPuro_Tot, 2),
+        round(rts.ComisionPo[i], 8),
+        sd.fechayhora                     
+        ]
+    ]
+    if bt.status: write_csv_bt(Data_csv, symbol)
+    else: write_db(Data_csv, symbol, ps.input_sl)
         
 
-
-    '''
-    - Comprar primero con Qty min si la fracmentacion se puede si no que no abra nada y tire mensaje.
-    - Tiene que abrir las cuatro posiciones, y cuando se alcanze una ver como cancelar la otra, 
-    asi como cuando alanza r1 borrrar el SL y poner el BE. 
-    '''
     
 # async def POs(i, ps, fds, fdl, rts, rtl, sd, symbol):
 

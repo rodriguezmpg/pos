@@ -1,6 +1,12 @@
 import os
 import json
 import asyncio
+import hmac
+import hashlib
+import time as _time
+from urllib.parse import urlencode
+
+import requests
 import websockets
 from binance.client import Client
 from binance.enums import *
@@ -16,15 +22,43 @@ API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 client = Client(API_KEY, API_SECRET, tld='com')
 
-# API_KEY = '5a4aa2b8a3af4b8508f73fd14a44d24aea7a1ac4f8ff7e506f0c0df1531fc079'
-# API_SECRET = '4381c8656f03f515775d19e7a15b80b2c0b00e63cd3fce529082602f29682e9e'
-# client = Client(API_KEY, API_SECRET, testnet=True)
-# client.FUTURES_URL = 'https://testnet.binancefuture.com/fapi'
-# client.FUTURES_WEBSOCKET_URL = 'wss://stream.binancefuture.com/ws'
+FUTURES_BASE = "https://fapi.binance.com"
 
 
+def _sign(params: dict) -> str:
+    """Firma HMAC-SHA256 que requiere Binance para endpoints firmados."""
+    query = urlencode(params, doseq=True)
+    return hmac.new(
+        API_SECRET.encode("utf-8"),
+        query.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _algo_order_post(params: dict) -> dict:
+    """
+    POST a /fapi/v1/algoOrder (Algo Order API).
+    Tras la migración del 2026-04-23, las órdenes condicionales
+    (STOP_MARKET, TAKE_PROFIT_MARKET, etc.) se envían acá, no por /fapi/v1/order.
+    """
+    params = dict(params)
+    params["timestamp"] = int(_time.time() * 1000)
+    params["recvWindow"] = 5000
+    params["signature"] = _sign(params)
+
+    headers = {"X-MBX-APIKEY": API_KEY}
+    url = f"{FUTURES_BASE}/fapi/v1/algoOrder"
+
+    resp = requests.post(url, params=params, headers=headers, timeout=10)
+    if resp.status_code != 200:
+        raise OrderError(f"Algo API {resp.status_code}: {resp.text}")
+    return resp.json()
+
+
+# --------------------- ÓRDENES ---------------------
 
 async def order_market(symbol: str, side: str, quantity: float, reduce: bool = False):
+    """MARKET sigue yendo por el endpoint clásico /fapi/v1/order."""
     try:
         order = client.futures_create_order(
             symbol=symbol,
@@ -35,7 +69,6 @@ async def order_market(symbol: str, side: str, quantity: float, reduce: bool = F
             newOrderRespType='FULL'
         )
         id_order = order['orderId']
-        print(f"Orden enviada: {id_order} - {symbol}")
         return id_order
     except Exception as e:
         print(f"Error al enviar la orden para {symbol}: {e} - Qty = {quantity}")
@@ -44,42 +77,55 @@ async def order_market(symbol: str, side: str, quantity: float, reduce: bool = F
 
 async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price: float):
     """
-    TP como TAKE_PROFIT_MARKET: cuando el precio toca trigger_price,
-    se dispara un MARKET garantizado. Paga Taker (0.05%).
+    TAKE_PROFIT_MARKET vía Algo Order API.
+    Cuando el precio toca trigger_price, se dispara un MARKET (paga taker).
     """
-    order = client.futures_create_order(
-        symbol=symbol,
-        side=side,
-        type='TAKE_PROFIT_MARKET',
-        stopPrice=trigger_price,
-        quantity=quantity,
-        reduceOnly=True,
-        timeInForce='GTE_GTC',
-        newOrderRespType='FULL'
-    )
-    return order['orderId']
-
-async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
     try:
-        order = client.futures_create_order(
-            symbol=symbol,                        # Ej: 'BTCUSDT'
-            side=side,                            # 'SELL' si la posición es LONG
-            type=FUTURE_ORDER_TYPE_STOP_MARKET,   # Tipo STOP_MARKET
-            stopPrice=stop_price,                 # Precio de disparo del SL
-            closePosition=True,                   # Cierra toda la posición
-            timeInForce='GTE_GTC',
-            newOrderRespType='FULL'
-        )
-        id_order = order['orderId']
-        print(f"SL STOP_MARKET enviado: {id_order} - {symbol} @ {stop_price}")
+        params = {
+            "algoType": "CONDITIONAL",
+            "symbol": symbol,
+            "side": side,
+            "type": "TAKE_PROFIT_MARKET",
+            "triggerPrice": trigger_price,
+            "quantity": quantity,
+            "reduceOnly": "true",
+            "timeInForce": "GTC",
+            "newOrderRespType": "RESULT",
+        }
+        result = await asyncio.to_thread(_algo_order_post, params)
+        id_order = result.get("algoId")
         return id_order
     except Exception as e:
-        print(f"Error al enviar SL STOP_MARKET para {symbol}: {e}")
-        raise OrderError(f"Error en SL STOP_MARKET para {symbol}: {e}")
-    
-    
+        print(f"Error TP_MARKET {symbol}: {e}")
+        raise OrderError(f"Error TP_MARKET {symbol}: {e}")
 
-async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1): #Obtiene los datos del historial de operaciones
+
+async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
+    """
+    STOP_MARKET vía Algo Order API. Cierra toda la posición (closePosition=true).
+    """
+    try:
+        params = {
+            "algoType": "CONDITIONAL",
+            "symbol": symbol,
+            "side": side,
+            "type": "STOP_MARKET",
+            "triggerPrice": stop_price,
+            "closePosition": "true",
+            "timeInForce": "GTC",
+            "newOrderRespType": "RESULT",
+        }
+        result = await asyncio.to_thread(_algo_order_post, params)
+        id_order = result.get("algoId")
+        return id_order
+    except Exception as e:
+        print(f"Error SL STOP_MARKET {symbol}: {e}")
+        raise OrderError(f"Error SL STOP_MARKET {symbol}: {e}")
+
+
+# --------------------- CONSULTAS / CIERRE (sin cambios) ---------------------
+
+async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1):
     for attempt in range(max_attempts):
         trades = client.futures_account_trades(symbol=symbol)
         trades_de_la_orden = [t for t in trades if t['orderId'] == id_order]
@@ -93,17 +139,15 @@ async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1): #Ob
                 PE_order = 0
             return PE_order, pnl, fee
         else:
-            # Si no se encontró la orden, esperar y reintentar
             await asyncio.sleep(wait_seconds)
-    # Si llegamos aquí, nunca encontramos la orden
-    raise Exception(f"No se encontró la orden {id_order} después de {max_attempts} intentos. en la fucion get_order_info()")
+    raise Exception(f"No se encontró la orden {id_order} después de {max_attempts} intentos.")
 
 
-async def get_order_pnl(symbol): #Para obtener el pnl de cierres parciales
+async def get_order_pnl(symbol):
     trades = client.futures_account_trades(symbol=symbol)
     ultimo_trade = trades[-1]
-    Pnl = float(ultimo_trade['realizedPnl'])
-    return Pnl
+    return float(ultimo_trade['realizedPnl'])
+
 
 async def close_total(symbol):
     def get_amt():
@@ -114,7 +158,6 @@ async def close_total(symbol):
                 return amt
         return 0.0
 
-    # 1) detectar posición abierta (con reintento corto)
     amt = 0.0
     for _ in range(3):
         amt = get_amt()
@@ -123,19 +166,16 @@ async def close_total(symbol):
         await asyncio.sleep(0.4)
 
     if amt == 0:
-        print(f"[close_total] No hay posición abierta para {symbol} (tras reintentos)")
+        print(f"[close_total] No hay posición abierta para {symbol}")
         return None
 
-    # 2) primer cierre reduceOnly
     qty = abs(amt)
     side = SIDE_BUY if amt < 0 else SIDE_SELL
     id_order = await order_market(symbol, side=side, quantity=qty, reduce=True)
 
-    # 3) verificar si quedó resto
     await asyncio.sleep(0.4)
     rem = get_amt()
 
-    # 4) segundo intento solo si sigue habiendo posición
     if rem != 0:
         qty2 = abs(rem)
         side2 = SIDE_BUY if rem < 0 else SIDE_SELL
@@ -145,13 +185,10 @@ async def close_total(symbol):
     return id_order
 
 
-
-
-def prueba_conexion(): #Para revisar si la IP es correcta
+def prueba_conexion():
     try:
         info = client.futures_account()
         return True
     except Exception as e:
         print(f"No se pudo conectar a Binance. Motivo: {e}")
         return False
-        

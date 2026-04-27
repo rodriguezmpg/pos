@@ -8,30 +8,27 @@ def _to_num(v):
         return None
     return v
 
-def write_db(Data_csv, symbol, valorsl):
-    """Reemplaza a write_csv: inserta las filas en la tabla movimientos."""
+def write_db(Data_csv, symbol):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     filas = []
     for row in Data_csv:
         filas.append((
-            symbol,              # symbol
-            valorsl,             # input_sl
-            row[0],              # id_order
-            row[1],              # type
-            _to_num(row[2]),     # sl
-            _to_num(row[3]),     # pe
-            _to_num(row[4]),     # tp
-            _to_num(row[5]),     # pnl
-            _to_num(row[6]),     # qty_usdt
-            _to_num(row[7]),     # qvar
-            _to_num(row[8]),     # pp
-            _to_num(row[9]),     # qty_total
-            _to_num(row[10]),    # balance
-            _to_num(row[11]),    # valor
-            _to_num(row[12]),    # comision
-            row[13],             # time
+            symbol,             
+            row[0],             
+            row[1],             
+            _to_num(row[2]),  
+            _to_num(row[3]),   
+            _to_num(row[4]),   
+            _to_num(row[5]),   
+            _to_num(row[6]),    
+            _to_num(row[7]),     
+            _to_num(row[8]),     
+            _to_num(row[9]),     
+            _to_num(row[10]),    
+            _to_num(row[11]),    
+            row[12],    
         ))
 
     cur.executemany("""

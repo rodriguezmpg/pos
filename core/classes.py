@@ -6,6 +6,8 @@ class DataPost:
         self.p2r = 0.00
         self.USDT1r = 0
         self.simulacion = False
+
+        self.comision = 0.00
         
 class FixedData: 
     def reset(self):
