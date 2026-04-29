@@ -163,6 +163,59 @@ def detener_socket(symbol):
         del active_tasks[symbol]
 
 
+#--------------------- ESCUCHA DE ACTIVACION DE ORDENES -----------------------------#
+from core.orders import listen_order_updates
+
+user_stream_task = None
+
+def iniciar_user_stream_async():
+    global user_stream_task, event_loop
+
+    if user_stream_task:
+        print("[USER STREAM] Ya está activo")
+        return
+
+    if event_loop is None:
+        print("[USER STREAM] Event loop no inicializado")
+        return
+
+    user_stream_task = asyncio.run_coroutine_threadsafe(
+        listen_order_updates(on_binance_order_filled),
+        event_loop,
+    )
+
+    print("[USER STREAM] Tarea enviada al loop")
+
+
+
+async def on_binance_order_filled(event):
+    order = event["o"]
+
+    symbol = order["s"].lower()
+    order_id = order["i"]
+    client_order_id = order["c"]
+    side = order["S"]
+    order_type = order["o"]
+    avg_price = float(order.get("ap", 0))
+    last_price = float(order.get("L", 0))
+    executed_qty = float(order.get("z", 0))
+    realized_pnl = float(order.get("rp", 0))
+    commission = float(order.get("n", 0) or 0)
+    commission_asset = order.get("N")
+
+    print(
+        f"[ORDEN EJECUTADA] "
+        f"symbol={symbol} "
+        f"type={order_type} "
+        f"side={side} "
+        f"order_id={order_id} "
+        f"client_id={client_order_id} "
+        f"avg_price={avg_price} "
+        f"last_price={last_price} "
+        f"qty={executed_qty} "
+        f"pnl={realized_pnl} "
+        f"fee={commission} {commission_asset}"
+    )
 
 
 

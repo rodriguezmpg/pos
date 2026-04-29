@@ -7,6 +7,7 @@ import os
 import requests
 import pandas as pd
 import sqlite3
+import time
 
 import main_loop
 from core.orders import prueba_conexion
@@ -199,6 +200,8 @@ if __name__ == '__main__':
     t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
     t.daemon = True
     t.start()
+    time.sleep(1)
+    main_loop.iniciar_user_stream_async()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
 
 
