@@ -361,100 +361,60 @@
 </script>
 
 <script>
-    let csvUrl = '';
-
     const headers = [
-        'ID','Type','SL','PE','TP','PnL','Qty$',
-        'Qvar','QVar Rec','Qty Total','Balance','V. Puro','Comision','Time'
+        'ID Order', 'Type', 'PE', 'SL', 'r0', 'r1', 'r2',
+        'Qty', 'V1R', 'PnL', 'Balance', 'Comision', 'Time'
     ];
 
-    function getRowClass(col2) {
-        if (typeof col2 !== 'string') return '';
-        if (col2.startsWith('TP')) return 'green-bg';
-        if (col2.startsWith('SL')) return 'blue-bg';
-        return '';
+    function renderTable(data) {
+        const tabla = document.getElementById('tablaCsv');
+        tabla.innerHTML = '';
+
+        const thead = document.createElement('thead');
+        const trHead = document.createElement('tr');
+        headers.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+        tabla.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+
+        data.forEach((row) => {
+            if (!Array.isArray(row)) return;
+
+            const tr = document.createElement('tr');
+            for (let i = 0; i < headers.length; i++) {
+                const td = document.createElement('td');
+                td.textContent = (row[i] ?? '');
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        });
+
+        tabla.appendChild(tbody);
     }
-    function isRestartRow(row) {
-    return Array.isArray(row) &&
-           row.length > 1 &&
-           String(row[1] ?? '').trim().toUpperCase() === 'RESTART';
-}
 
-function renderTable(data) {
-    const tabla = document.getElementById('tablaCsv');
-    tabla.innerHTML = '';
-
-    const thead = document.createElement('thead');
-    const trHead = document.createElement('tr');
-    headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        trHead.appendChild(th);
-    });
-    thead.appendChild(trHead);
-    tabla.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-
-    data.forEach((rawRow) => {
-        // Normaliza: si viene objeto, lo convierte a array por orden de headers
-        const row = Array.isArray(rawRow)
-            ? rawRow
-            : [
-                rawRow.ID, rawRow.Type, rawRow.SL, rawRow.PE, rawRow.TP, rawRow.PnL, rawRow['Qty$'],
-                rawRow.Qvar, rawRow['QVar Rec'], rawRow['Qty Total'], rawRow.Balance, rawRow['V. Puro'], rawRow.Comision, rawRow.Time
-              ];
-
-        if (isRestartRow(row)) {
-    const inputSlValue = row.length > 14 ? row[14] : '';
-    const tr = document.createElement('tr');
-    tr.className = 'restart-row';
-
-    const td = document.createElement('td');
-    td.textContent = `RESTART - ${inputSlValue}`;
-    td.colSpan = headers.length;
-
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-    return;
-}
-
-        const tr = document.createElement('tr');
-        const colorClass = getRowClass(String(row[1] ?? ''));
-        if (colorClass) tr.classList.add(colorClass);
-
-        for (let i = 0; i < headers.length; i++) {
-            const td = document.createElement('td');
-            td.textContent = (row[i] ?? '');
-            tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-    });
-
-    tabla.appendChild(tbody);
-}
-
-function cargarCSV() {
-    const url = `/movimientos?ticker=${encodeURIComponent(ticker)}`;
-    console.log('[DEBUG] URL movimientos =', url);
-
-    $.getJSON(url, function(filas) {
-        console.log('[DEBUG] filas:', filas);
-        if (!Array.isArray(filas)) {
-            console.error('Formato inesperado en /movimientos:', filas);
+    function cargarCSV() {
+        const url = `/movimientos?ticker=${encodeURIComponent(ticker)}`;
+        $.getJSON(url, function(filas) {
+            if (!Array.isArray(filas)) {
+                console.error('Formato inesperado en /movimientos:', filas);
+                document.getElementById('tablaCsv').innerHTML =
+                    `<tr><td colspan="${headers.length}" style="color:red;">Formato inválido de datos</td></tr>`;
+                return;
+            }
+            renderTable(filas);
+        }).fail(function(error) {
+            console.error('Error cargando movimientos:', error);
             document.getElementById('tablaCsv').innerHTML =
-                '<tr><td colspan="14" style="color:red;">Formato inválido de datos</td></tr>';
-            return;
-        }
-        renderTable(filas);
-    }).fail(function(error) {
-        console.error('Error cargando movimientos:', error);
-        document.getElementById('tablaCsv').innerHTML =
-            '<tr><td colspan="14" style="color:red;">Error al cargar movimientos de la DB</td></tr>';
-    });
-}
+                `<tr><td colspan="${headers.length}" style="color:red;">Error al cargar movimientos de la DB</td></tr>`;
+        });
+    }
 
-cargarCSV();
+    cargarCSV();
 </script>
 
 
