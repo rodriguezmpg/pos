@@ -86,9 +86,13 @@ async def Grid(symbol, ps, fd, rt):
 
 
         
-        id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, fd.r1, tag="R1")
-        id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, fd.r2, tag="R2")
-        id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.r_1, tag="SL")
+        # id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, fd.r1, tag="R1")
+        # id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, fd.r2, tag="R2")
+        # id_order_r_1 = await order_sl_stop_market(symbol, side_close, fd.r_1, tag="SL")
+
+        id_order_r1 = await order_tp_market(symbol, side_close, fd.Qty_r1, 84.90, tag="R1")
+        id_order_r2 = await order_tp_market(symbol, side_close, fd.Qty_r2, 85, tag="R2")
+        id_order_r_1 = await order_sl_stop_market(symbol, side_close, 84.72, tag="SL")
 
     
 
