@@ -87,7 +87,16 @@ class RealTime:
         self.ALGO_pos = ''
         self.balance_vivo = 0.00
 
+        self.capital = 5000
 
+
+class Global:
+    def reset(self):
+        self.__init__()
+    def __init__(self):
+        self.capital = 5000
+
+gl = Global() 
 
 class OrderError(Exception): #Para que detenga el socket si hay error en la orden.
     pass

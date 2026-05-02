@@ -6,9 +6,11 @@ import traceback
 
 
 from core.orders import get_listen_key
-from core.classes import DataPost, FixedData, RealTime, OrderError
+from core.classes import DataPost, FixedData, RealTime, OrderError, Global
 from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
+
+
 
 symbol_list = ["ethusdt", "btcusdt", "bnbusdt", "solusdt", "xrpusdt", "trxusdt", "avaxusdt", "tonusdt", "ltcusdt",
                "1000shibusdt", "dogeusdt","adausdt","xlmusdt","xmrusdt","dotusdt","uniusdt","aptusdt","nearusdt",

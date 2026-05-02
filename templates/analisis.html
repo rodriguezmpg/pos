@@ -302,7 +302,7 @@
           <tbody>
             <tr>
               <td>Capital Base</td>
-              <td><span id="fin_capital_base"></span></td>
+              <td><span id="gl_capital"></span></td>
             </tr>
             <tr>
               <td>Pérdidas estimadas</td>
@@ -401,6 +401,15 @@
 </div>
 
 <script>
+
+    
+
+
+
+
+
+
+
   const message              = document.getElementById("message");
   const results              = document.getElementById("results");
   const searchSymbol         = document.getElementById("searchSymbol");
@@ -757,6 +766,17 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === "Escape") cerrarModalSecuencia();
   });
+
+
+
+  function actualizarDatos() {
+        $.getJSON(`/datos_analisis`, function(data) {
+            $('.gl_capital').text(data.gl_capital);
+          
+        })
+    }           
+  setInterval(actualizarDatos, 5000); 
+  actualizarDatos();
 </script>
 
 </body>

@@ -120,7 +120,7 @@ async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
 
 
 
-async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1):
+async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=2):
     if id_order is None:
         return 0, 0, 0, 0
 

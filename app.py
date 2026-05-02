@@ -12,6 +12,7 @@ import main_loop
 from core.orders import prueba_conexion
 from core.dbfunc import DB_PATH
 from core.dbinit import init_db
+from core.classes import gl
 
 app=Flask(__name__)
 init_db()
@@ -89,6 +90,15 @@ def datos():
         'rt_posicion_porc': rt.posicion_porc,
         'rt_balance_vivo': round(rt.balance,2),
         'rt_pnl_vivo': rt.pnl_vivo,
+        
+    })
+
+@app.route('/datos_analisis')
+def datos_analisis(): 
+   
+    return jsonify({
+        'gl_capital': gl.capital,
+        
         
     })
 
