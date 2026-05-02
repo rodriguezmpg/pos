@@ -49,8 +49,8 @@ async def Grid(symbol, ps, fd, rt):
         fd.mensaje = f'Cantidad minima no aceptada minimo: {USDTmin}'
 
     if fd.control:
-        id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
-        #id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
+        #id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
+        id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
         PE_order, pnl, Fee, qty = await get_order_info(symbol, id_order_r0, max_attempts=10, wait_seconds=1) 
         fd.r0 = round(PE_order, fd.dec_precio)
         rt.comision = Fee
@@ -99,21 +99,21 @@ async def Grid(symbol, ps, fd, rt):
         rt.balance -= rt.comision
 
 
-        if fd.type_pos == 'SHORT':
-            fd.r_1 = round(fd.r0 * 1.0005, fd.dec_precio)
-            fd.r1 = round(fd.r0 * 0.9995, fd.dec_precio)
-            fd.r2 = round(fd.r0 * 0.9990, fd.dec_precio)
-        else:
-            fd.r_1 = round(fd.r0 * 0.9995, fd.dec_precio)
-            fd.r1 = round(fd.r0 * 1.0005, fd.dec_precio)
-            fd.r2 = round(fd.r0 * 1.0010, fd.dec_precio)       
-        rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, 0.10, fd.r1)
-        rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, 0.05, fd.r2)
-        rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
-
-        # rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, fd.Qty_r1, fd.r1)
-        # rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, fd.Qty_r2, fd.r2)
+        # if fd.type_pos == 'SHORT': #TEST RAPIDO
+        #     fd.r_1 = round(fd.r0 * 1.0005, fd.dec_precio)
+        #     fd.r1 = round(fd.r0 * 0.9995, fd.dec_precio)
+        #     fd.r2 = round(fd.r0 * 0.9990, fd.dec_precio)
+        # else:
+        #     fd.r_1 = round(fd.r0 * 0.9995, fd.dec_precio)
+        #     fd.r1 = round(fd.r0 * 1.0005, fd.dec_precio)
+        #     fd.r2 = round(fd.r0 * 1.0010, fd.dec_precio)       
+        # rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, 0.10, fd.r1)
+        # rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, 0.05, fd.r2)
         # rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
+
+        rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, fd.Qty_r1, fd.r1)
+        rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, fd.Qty_r2, fd.r2)
+        rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
 
 
 async def r1_r2(symbol, ps, fd, rt):

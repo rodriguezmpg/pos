@@ -15,6 +15,10 @@ from core.dbinit import init_db
 
 app=Flask(__name__)
 init_db()
+daemon_thread = threading.Thread(target=iniciar_asyncio_orderupdate, daemon=True)
+daemon_thread.start()
+
+
 
 @app.route('/')
 def index():
@@ -254,8 +258,6 @@ def movimientos_all():
 
 
 if __name__ == '__main__':
-    daemon_thread = threading.Thread(target=iniciar_asyncio_orderupdate, daemon=True)
-    daemon_thread.start()
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
 
