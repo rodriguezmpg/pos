@@ -156,18 +156,23 @@ def start_trading():
 
 
 
-
-class NoisyRequestFilter(logging.Filter): #Filtro del log para que no muestre determinados mensajes
+### FILTRO LOGS SILENCIADOR
+class NoisyRequestFilter(logging.Filter):
+    """Filtro del log para que no muestre determinados mensajes"""
     def filter(self, record):
         msg = record.getMessage()
         if "GET" in msg or "POST" in msg:
             return False
-        if "/datos" in msg or "/precio" in msg or re.search(r"registro_posiciones\w*\.csv", msg):
+        if "/datos" in msg or "/precio" in msg or "/datos_PControl" in msg:
+            return False
+        if re.search(r"registro_posiciones\w*\.csv", msg):
             return False
         return True
-werkzeug_logger = logging.getLogger('werkzeug')
-if not any(isinstance(f, NoisyRequestFilter) for f in werkzeug_logger.filters):
-    werkzeug_logger.addFilter(NoisyRequestFilter())
+_filter = NoisyRequestFilter()
+for logger_name in ('werkzeug', 'gunicorn.access'):
+    logger = logging.getLogger(logger_name)
+    if not any(isinstance(f, NoisyRequestFilter) for f in logger.filters):
+        logger.addFilter(_filter)
 
 
 
