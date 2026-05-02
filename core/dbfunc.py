@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_PATH = "static/data/data.db"
+DB_PATH = os.getenv("DB_PATH", "static/data/data.db")
 
 def _to_num(v):
     """Convierte '' o None a NULL; deja números como están."""

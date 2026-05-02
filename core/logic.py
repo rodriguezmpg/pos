@@ -1,11 +1,11 @@
 import sqlite3
 
-from core.dbfunc import write_db, write_analisis_db
+from core.dbfunc import write_db, write_analisis_db, DB_PATH
 from core.orders import close_total, order_market, get_order_info, order_tp_market, order_sl_stop_market, cancel_algo_order
 
 
 async def Grid(symbol, ps, fd, rt):
-    conn = sqlite3.connect("static/data/data.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("SELECT id_pos FROM movimientos WHERE symbol = ? ORDER BY pk DESC LIMIT 1", (symbol,))
     row = cur.fetchone()

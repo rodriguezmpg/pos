@@ -8,10 +8,11 @@ from main_loop import iniciar_asyncio_orderupdate, symbol_list
 
 import main_loop
 from core.orders import prueba_conexion
-
-
+from core.dbfunc import DB_PATH
+from core.dbinit import init_db
 
 app=Flask(__name__)
+init_db()
 
 @app.route('/')
 def index():
@@ -169,7 +170,7 @@ if not any(isinstance(f, NoisyRequestFilter) for f in werkzeug_logger.filters):
 def movimientos():
     ticker = (request.args.get("ticker") or "").lower().strip()
  
-    conn = sqlite3.connect("static/data/data.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("""
         SELECT id_order, type, pos, pe, sl, r1, r2, qty,
@@ -192,7 +193,7 @@ def movimientos():
 
 @app.route('/analisis_data') #Consulta para analisis.html
 def analisis_data():
-    conn = sqlite3.connect("static/data/data.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("""
         SELECT symbol, id_pos, type, pos, time_open, time_close,
@@ -208,7 +209,7 @@ def analisis_data():
 @app.route('/analisis_data_symbol') #Consulta para analisis_symbol.html
 def analisis_data_symbol():
     ticker = (request.args.get("ticker") or "").lower().strip()
-    conn = sqlite3.connect("static/data/data.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("""
         SELECT symbol, id_pos, type, pos, time_open, time_close,
@@ -225,7 +226,7 @@ def analisis_data_symbol():
 @app.route('/movimientos_all') #Consulta para analisis_symbol.html
 def movimientos_all():
     ticker = (request.args.get("ticker") or "").lower().strip()
-    conn = sqlite3.connect("static/data/data.db")
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     # id_order es índice 0, id_pos es índice 1
     cur.execute("""
