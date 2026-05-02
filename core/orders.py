@@ -121,6 +121,9 @@ async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
 
 
 async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1):
+    if id_order is None:
+        return 0, 0, 0, 0
+
     for attempt in range(max_attempts):
         trades = client.futures_account_trades(symbol=symbol)
         trades_de_la_orden = [t for t in trades if t['orderId'] == id_order]

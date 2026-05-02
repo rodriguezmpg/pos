@@ -15,8 +15,7 @@ from core.dbinit import init_db
 
 app=Flask(__name__)
 init_db()
-daemon_thread = threading.Thread(target=iniciar_asyncio_orderupdate, daemon=True)
-daemon_thread.start()
+
 
 
 
@@ -156,23 +155,18 @@ def start_trading():
 
 
 
-### FILTRO LOGS SILENCIADOR
-class NoisyRequestFilter(logging.Filter):
-    """Filtro del log para que no muestre determinados mensajes"""
+
+class NoisyRequestFilter(logging.Filter): #Filtro del log para que no muestre determinados mensajes
     def filter(self, record):
         msg = record.getMessage()
         if "GET" in msg or "POST" in msg:
             return False
-        if "/datos" in msg or "/precio" in msg or "/datos_PControl" in msg:
-            return False
-        if re.search(r"registro_posiciones\w*\.csv", msg):
+        if "/datos" in msg or "/precio" in msg:
             return False
         return True
-_filter = NoisyRequestFilter()
-for logger_name in ('werkzeug', 'gunicorn.access'):
-    logger = logging.getLogger(logger_name)
-    if not any(isinstance(f, NoisyRequestFilter) for f in logger.filters):
-        logger.addFilter(_filter)
+werkzeug_logger = logging.getLogger('werkzeug')
+if not any(isinstance(f, NoisyRequestFilter) for f in werkzeug_logger.filters):
+    werkzeug_logger.addFilter(NoisyRequestFilter())
 
 
 
@@ -263,6 +257,8 @@ def movimientos_all():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    daemon_thread = threading.Thread(target=iniciar_asyncio_orderupdate, daemon=True) #inicia escucha de ordenes
+    daemon_thread.start()
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
 
 

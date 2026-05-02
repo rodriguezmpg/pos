@@ -3,4 +3,3 @@ python-binance==1.0.29
 python-dotenv==1.1.1
 requests==2.32.3
 websockets==13.1
-gunicorn==21.2.0
