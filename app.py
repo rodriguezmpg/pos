@@ -1,9 +1,10 @@
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, send_file, abort
 import threading
 import re 
 import logging
 import requests
 import sqlite3
+import os
 import time as _time
 from main_loop import iniciar_asyncio_orderupdate, symbol_list
 
@@ -167,6 +168,16 @@ if not any(isinstance(f, NoisyRequestFilter) for f in werkzeug_logger.filters):
 
 
 ################################ LECTURA DATABASE ################################
+@app.route('/admin/download_db') #Descargar DB
+def download_db():
+    token = request.args.get("token")
+    expected = os.getenv("ADMIN_TOKEN")
+    if not expected or token != expected:
+        abort(403)
+    return send_file(DB_PATH, as_attachment=True, download_name="data.db")
+
+
+
 @app.route('/movimientos') #Consulta para main_loop.html
 def movimientos():
     ticker = (request.args.get("ticker") or "").lower().strip()
