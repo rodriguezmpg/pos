@@ -75,7 +75,7 @@ async def order_market(symbol: str, side: str, quantity: float, reduce: bool = F
         raise OrderError(f"Error en la orden para {symbol}: {e}")
 
 
-async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price: float, tag: str = ""):
+async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price: float):
     """
     TAKE_PROFIT_MARKET vía Algo Order API.
     Cuando el precio toca trigger_price, se dispara un MARKET (paga taker).
@@ -92,8 +92,6 @@ async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price
             "timeInForce": "GTC",
             "newOrderRespType": "RESULT",
         }
-        if tag:
-            params["clientAlgoId"] = f"{symbol.upper()}_{tag}_{int(time.time() * 1000)}"
         result = await asyncio.to_thread(_algo_order_post, params)
         id_order = result.get("algoId")
         return id_order
@@ -102,7 +100,7 @@ async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price
         raise OrderError(f"Error TP_MARKET {symbol}: {e}")
 
 
-async def order_sl_stop_market(symbol: str, side: str, stop_price: float, tag: str = ""):
+async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
     """
     STOP_MARKET vía Algo Order API. Cierra toda la posición (closePosition=true).
     """
@@ -117,8 +115,6 @@ async def order_sl_stop_market(symbol: str, side: str, stop_price: float, tag: s
             "timeInForce": "GTC",
             "newOrderRespType": "RESULT",
         }
-        if tag:
-            params["clientAlgoId"] = f"{symbol.upper()}_{tag}_{int(time.time() * 1000)}"
         result = await asyncio.to_thread(_algo_order_post, params)
         id_order = result.get("algoId")
         return id_order
@@ -140,7 +136,7 @@ async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1):
                 PE_order = sum(float(t['price']) * float(t['qty']) for t in trades_de_la_orden) / total_qty
             else:
                 PE_order = 0
-            return PE_order, pnl, fee
+            return PE_order, pnl, fee, total_qty
         else:
             await asyncio.sleep(wait_seconds)
     raise Exception(f"No se encontró la orden {id_order} después de {max_attempts} intentos.")
@@ -187,6 +183,49 @@ async def close_total(symbol):
 
     return id_order
 
+def cancel_algo_order(symbol: str, algo_id: int):
+    if not algo_id:
+        return None
+
+    try:
+        params = {
+            "symbol": symbol,
+            "algoId": algo_id,
+            "timestamp": int(_time.time() * 1000),
+            "recvWindow": 5000,
+        }
+        params["signature"] = _sign(params)
+
+        headers = {"X-MBX-APIKEY": API_KEY}
+
+        resp = requests.delete(
+            f"{FUTURES_BASE}/fapi/v1/algoOrder",
+            params=params,
+            headers=headers,
+            timeout=10
+        )
+
+        if resp.status_code in (400, 404):
+            print(f"[INFO] AlgoId={algo_id} ya no existe, nada que cancelar.")
+            return None
+
+        if resp.status_code != 200:
+            raise Exception(f"Error cancelando algoId {algo_id}: {resp.text}")
+
+        print(f"[OK] Cancelada algoId={algo_id}")
+        return resp.json()
+
+    except Exception as e:
+        print(f"[ERROR] cancel_algo_order: {e}")
+        return None
+
+
+def get_listen_key(): #para escucha de cambios en ordenes condicionales
+    url = f"{FUTURES_BASE}/fapi/v1/listenKey"
+    headers = {"X-MBX-APIKEY": API_KEY}
+    resp = requests.post(url, headers=headers, timeout=10)
+    return resp.json()["listenKey"]
+
 
 def prueba_conexion():
     try:
@@ -197,84 +236,3 @@ def prueba_conexion():
         return False
 
 
-
-#--------------------- ESCUCHA DE ACTIVACION DE ORDENES -----------------------------#
-
-FUTURES_WS_BASE = "wss://fstream.binance.com/ws"
-
-
-def _create_listen_key() -> str:
-    headers = {"X-MBX-APIKEY": API_KEY}
-    url = f"{FUTURES_BASE}/fapi/v1/listenKey"
-
-    resp = requests.post(url, headers=headers, timeout=10)
-    if resp.status_code != 200:
-        raise OrderError(f"Error creando listenKey: {resp.status_code} {resp.text}")
-
-    return resp.json()["listenKey"]
-
-
-def _keepalive_listen_key(listen_key: str):
-    headers = {"X-MBX-APIKEY": API_KEY}
-    url = f"{FUTURES_BASE}/fapi/v1/listenKey"
-
-    resp = requests.put(
-        url,
-        params={"listenKey": listen_key},
-        headers=headers,
-        timeout=10,
-    )
-
-    if resp.status_code != 200:
-        raise OrderError(f"Error renovando listenKey: {resp.status_code} {resp.text}")
-
-
-async def listen_order_updates(on_order_filled):
-    """
-    Escucha ejecuciones reales de órdenes Futures.
-    Recibe eventos de TODOS los símbolos de la cuenta.
-    """
-
-    while True:
-        listen_key = await asyncio.to_thread(_create_listen_key)
-        url = f"{FUTURES_WS_BASE}/{listen_key}"
-
-        print("[USER STREAM] Iniciado para órdenes de Binance Futures")
-
-        async def keepalive_loop():
-            while True:
-                await asyncio.sleep(30 * 60)
-                await asyncio.to_thread(_keepalive_listen_key, listen_key)
-                print("[USER STREAM] listenKey renovado")
-
-        keepalive_task = asyncio.create_task(keepalive_loop())
-
-        try:
-            async with websockets.connect(url) as websocket:
-                while True:
-                    msg = await websocket.recv()
-                    data = json.loads(msg)
-
-                    if data.get("e") != "ORDER_TRADE_UPDATE":
-                        continue
-
-                    order = data.get("o", {})
-
-                    order_type = order.get("o")
-                    execution_type = order.get("x")
-                    order_status = order.get("X")
-
-                    if (
-                        execution_type == "TRADE"
-                        and order_status == "FILLED"
-                        and order_type in ("TAKE_PROFIT_MARKET", "STOP_MARKET")
-                    ):
-                        await on_order_filled(data)
-
-        except Exception as e:
-            print(f"[USER STREAM] Error: {e}. Reintentando en 5 segundos...")
-
-        finally:
-            keepalive_task.cancel()
-
-        await asyncio.sleep(5)

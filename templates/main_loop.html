@@ -63,6 +63,26 @@
             margin-bottom: 16px;
         }
 
+        /* Estilo para el botón gris */
+        .btn-gray {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            width: 100%;
+            margin-top: 12px;
+            text-transform: uppercase;
+        }
+        .btn-gray:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
         /* Tablas generales */
         table.tablafija {
             width: 100%;
@@ -78,7 +98,8 @@
         }
 
         table.tablafija th:first-child,
-        table.tablafija td:first-child {
+        table.tablafija td:first-child,
+        table.tablafija td.td-label {
             text-align: left;
             color: var(--muted);
             font-weight: 600;
@@ -120,6 +141,11 @@
         table.tabla-csv thead th {
             background: #f3f4f6;
             font-weight: bold;
+        }
+
+        /* Hover de filas, igual que en los html de análisis */
+        table.tabla-csv tbody tr:hover {
+            background: #eef2ff;
         }
 
         table.tabla-csv .green-bg {
@@ -188,10 +214,10 @@
 
     <div class="page-title" id="titulo"></div>
 
-    <!-- FILA SUPERIOR: Info + Short/Long + Contabilidad -->
+    <!-- FILA SUPERIOR: 3 columnas iguales -->
     <div class="top-grid">
 
-        <!-- COL 1: Info general + Parámetros -->
+        <!-- COL 1: Información general + Grilla -->
         <div>
             <div class="card">
                 <div class="card-title">Información general</div>
@@ -200,26 +226,91 @@
                         <tr>
                             <td>P. Actual</td>
                             <td><span class="current_price"></span></td>
-                            <td>V1R</td>
+                            <td class="td-label">V1R</td>
                             <td><span class="ps_USDT1r"></span></td>
                         </tr>
                         <tr>
                             <td>PE</td>
                             <td><span class="fd_r0"></span></td>
-                            <td>Type</td>
+                            <td class="td-label">Type</td>
                             <td><span class="fd_type_pos"></span></td>
                         </tr>
                         <tr>
                             <td>QtymVar</td>
                             <td><span class="fd_Qty_mVar"></span></td>
+                            <td class="td-label">Qty min</td>
+                            <td><span class="fd_Qty_min"></span></td>
+                        </tr>
+                        <tr>
+                            <td>F. Inicio</td><td colspan="3"><span class="fd_fechainicio"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Estado</td><td colspan="3"><span class="fd_mensaje"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COL 2: Contabilidad + Cierre -->
+        <div>
+            <div class="card">
+                <div class="card-title">Contabilidad</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr>
+                            <td>Balance Actual</td>
+                            <td><span class="rt_balance"></span></td>
+                            <td class="td-label">Pnl</td>
+                            <td><span class="rt_pnl_vivo"></span></td>
+                        </tr>
+                        <tr>
+                            <td>Balance Vivo</td>
+                            <td><span class="rt_balance_vivo"></span></td>
+                            <td class="td-label"></td>
+                            <td><span class=""></span></td>
+                        </tr>
+                        <tr>
+                            <td>%</td>
+                            <td><span class="rt_posicion_porc"></span></td>
+                            <td></td>
+                            <td><span class=""></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn-gray" onclick="window.open('/analisis_symbol?ticker=' + ticker, '_blank')">Análisis Símbolo</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Cierre</div>
+                <table class="tablafija">
+                    <tbody>
+                        <tr>
+                            <td>Posicion BE</td>
+                            <td><span class="rt_BE_pos"></span></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Activador</td>
+                            <td><span class="rt_r_ts"></span></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Cierre Actual</td>
+                            <td><span class="rt_r_1"></span></td>
                             <td></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <div class="card">
+        <!-- COL 3: Grilla -->
+        <div>
+           <div class="card">
                 <div class="card-title">Grilla</div>
                 <table class="tablafija">
                     <tbody>
@@ -229,7 +320,6 @@
                             <td>Dist.</td>
                             <td>Qty</td>
                             <td>Pnl</td>
-
                         </tr>
                         <tr>
                             <td>r_1</td>
@@ -259,28 +349,8 @@
                             <td><span class="fd_Qty_r2"></span></td>
                             <td><span class="fd_pnl2r"></span></td>
                         </tr>
-             </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- COL 3: Contabilidad -->
-        <div>
-            <div class="card">
-                <div class="card-title">Contabilidad</div>
-                <table class="tablafija">
-                    <tbody>
-                        <tr><td>Balance Actual</td><td><span class="sd_Bal_Pos"></span></td><td>-</td><td><span class=""></span></td></tr>
-                        <tr><td>-</td><td><span class="sd_ValorPuro_Tot"></span></td><td>Qty min</td><td><span class="fd_Qty_min"></span></td></tr>
-                        <tr><td>-</td><td><span class="sd_perd_esperada"></span></td><td>F. Inicio</td><td><span class="fd_fechainicio"></span></td></tr>
                     </tbody>
                 </table>
-            </div>
-        </div>
-         <div>
-            <div class="card">
-                <div class="card-title"><span class="fd_mensaje"></span></div>
             </div>
         </div>
 
@@ -329,11 +399,6 @@
             $('.fd_pnl2r').text(data.fd_pnl2r);
 
             $('.fd_mensaje').text(data.fd_mensaje);
-
-            
-            
-
-
         });
     }
     $(document).ready(function() {
@@ -347,13 +412,15 @@
     }           
     setInterval(actualizarPrecio, 1000); 
     
-    function actualizarDatos() { //Datos que se axctualizan cada determinado tiempo
+    function actualizarDatos() {
         $.getJSON(`/datos?ticker=${ticker}`, function(data) {
-
-
-            $('.contador').text(data.contador);
-
- 
+            $('.rt_BE_pos').text(data.rt_BE_pos);
+            $('.rt_r_ts').text(data.rt_r_ts);
+            $('.rt_r_1').text(data.rt_r_1);
+            $('.rt_balance').text(data.rt_balance);
+            $('.rt_posicion_porc').text(data.rt_posicion_porc);
+            $('.rt_balance_vivo').text(data.rt_balance_vivo);
+            $('.rt_pnl_vivo').text(data.rt_pnl_vivo);
         })
     }           
     setInterval(actualizarDatos, 5000); 
@@ -362,7 +429,7 @@
 
 <script>
     const headers = [
-        'ID Order', 'Type', 'PE', 'SL', 'r0', 'r1', 'r2',
+        'ID Order', 'Type', 'Pos', 'PE', 'SL', 'R1', 'R2',
         'Qty', 'V1R', 'PnL', 'Balance', 'Comision', 'Time'
     ];
 
@@ -416,8 +483,6 @@
 
     cargarCSV();
 </script>
-
-
 
 </body>
 </html>

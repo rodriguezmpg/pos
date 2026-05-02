@@ -9,8 +9,10 @@ import os
 from dotenv import load_dotenv
 import traceback
 
+
+from core.orders import get_listen_key
 from core.classes import DataPost, FixedData, RealTime, OrderError
-from core.logic import Grid, Steps_L, Steps_S
+from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
 
 symbol_list = ["ethusdt", "btcusdt", "bnbusdt", "solusdt", "xrpusdt", "trxusdt", "avaxusdt", "tonusdt", "ltcusdt",
@@ -72,7 +74,7 @@ async def calculos(symbol, datasocket):
         rt.fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         await Grid(symbol, ps, fd, rt)
         
-        print(f"Grillas listas para {symbol} - Simulacion = {ps.simulacion} - {rt.fechayhora}")
+        print(f"Grillas listas para {symbol} - {rt.fechayhora}")
         
         reinicio[symbol] = False  
 
@@ -82,8 +84,7 @@ async def calculos(symbol, datasocket):
 
         rt.fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
 
-        # await Steps_S(ps, fd, rt, symbol)
-        # await Steps_L(ps, fd, rt, symbol)
+        await Steps(ps, fd, rt, symbol)
 
 
 ################# FUNCIONES RELACIONADAS AL SOCKET #######################
@@ -156,68 +157,86 @@ def iniciar_socket_async(symbol):
     ps, fd, rt = get_vars(symbol)
   
 
-def detener_socket(symbol):
+async def detener_socket(symbol, ps, fd, rt):
     task = active_tasks.get(symbol)
+    print(f"rt.detener_cm en stop soket: {rt.detener_cm}")
+    await r_1(symbol, ps, fd, rt)
     if task:        
         task.cancel()
         del active_tasks[symbol]
 
 
-#--------------------- ESCUCHA DE ACTIVACION DE ORDENES -----------------------------#
-from core.orders import listen_order_updates
 
-user_stream_task = None
+def iniciar_asyncio_orderupdate():
+    global event_loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    event_loop = loop
+    loop.create_task(start_user_data_socket_order_update())
 
-def iniciar_user_stream_async():
-    global user_stream_task, event_loop
+    loop.run_forever()
 
-    if user_stream_task:
-        print("[USER STREAM] Ya está activo")
-        return
+async def start_user_data_socket_order_update():
 
-    if event_loop is None:
-        print("[USER STREAM] Event loop no inicializado")
-        return
+    while True:
+        try:
+            listen_key = await asyncio.to_thread(get_listen_key)
+            # Nos aseguramos de pedir todos los eventos posibles en el endpoint private
+            eventos = "ORDER_TRADE_UPDATE/ALGO_UPDATE/ACCOUNT_CONFIG_UPDATE"
+            url = f"wss://fstream.binance.com/private/ws?listenKey={listen_key}&events={eventos}"
+            
+            async with websockets.connect(url) as ws:
+                print("[GENERAL SOCKET] Conectado")
+                
+                while True:
+                    msg = await ws.recv()
+                    data = json.loads(msg)
+                    evento = data.get("e")
 
-    user_stream_task = asyncio.run_coroutine_threadsafe(
-        listen_order_updates(on_binance_order_filled),
-        event_loop,
-    )
+                    if evento == "ORDER_TRADE_UPDATE":
+                        o = data.get("o", {})
+                        algo_id_vinculado = o.get("si") or o.get("ca") # ca es Client Algo ID
+                        order_id_real = o.get("i")
+                        symbol_raw = o.get("s")
+                        
+                        if o.get("X") == "FILLED":
+                            pnl = float(o.get("rp", 0))
+                            if pnl != 0:
+                                if symbol_raw:
+                                    try: 
+                                        ps, fd, rt = get_vars(symbol_raw.lower())
 
-    print("[USER STREAM] Tarea enviada al loop")
+                                        if algo_id_vinculado == rt.id_order_r1: rt.r1_active = True
+                                        if algo_id_vinculado == rt.id_order_r2: rt.r2_active = True
+                                        if algo_id_vinculado == rt.id_order_r_1: rt.r_1_active = True
+                                        if algo_id_vinculado == rt.id_order_r_1: rt.r_1_active = True
+                                        
 
+                                        rt.ALGO_orderid = order_id_real
+                                        rt.ALGO_pnl = float(pnl)
+                                        rt.AlGO_comision = float(o.get('n')) #N
+                                        rt.ALGO_QtymVar = float(o.get("z")) # o probar "l"
+                                        rt.ALGO_PE = float(o.get("ap"))
+                                                                             
+                                    except Exception as var_error:
+                                        print(f"[ERROR VARS] No se pudo asignar posicionalgo para {symbol_raw}: {var_error}")
 
+                                # print(f"DETALLES DE CIERRE")
+                                # print(f"Símbolo: {o.get('s')}")
+                                # print(f"Order ID: {order_id_real}")
+                                # print(f"Algo ID Vinculado: {algo_id_vinculado}")
+                                # print(f"PNL Realizado: {pnl}")
+                                # print(f"Comisión: {o.get('n')} {o.get('N')}")
+                                # print(f"rt.id_order_r1: {rt.id_order_r1}")
+                                # print(f"rt.id_order_r2: {rt.id_order_r2}")
+                                # print(f"rt.id_order_r_1: {rt.id_order_r_1}")
+                                # print(f"rt.r1_active: {rt.r1_active}")
+                                # print(f"rt.r2_active: {rt.r2_active}")
+                                # print(f"rt.r_1_active: {rt.r_1_active}")
+                                
 
-async def on_binance_order_filled(event):
-    order = event["o"]
-
-    symbol = order["s"].lower()
-    order_id = order["i"]
-    client_order_id = order["c"]
-    side = order["S"]
-    order_type = order["o"]
-    avg_price = float(order.get("ap", 0))
-    last_price = float(order.get("L", 0))
-    executed_qty = float(order.get("z", 0))
-    realized_pnl = float(order.get("rp", 0))
-    commission = float(order.get("n", 0) or 0)
-    commission_asset = order.get("N")
-
-    print(
-        f"[ORDEN EJECUTADA] "
-        f"symbol={symbol} "
-        f"type={order_type} "
-        f"side={side} "
-        f"order_id={order_id} "
-        f"client_id={client_order_id} "
-        f"avg_price={avg_price} "
-        f"last_price={last_price} "
-        f"qty={executed_qty} "
-        f"pnl={realized_pnl} "
-        f"fee={commission} {commission_asset}"
-    )
-
-
-
+        except Exception as e:
+            print(f"[USER SOCKET ERROR] Reintentando... {e}")
+            await asyncio.sleep(5)
 
 

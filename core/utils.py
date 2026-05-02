@@ -9,43 +9,7 @@ import pandas as pd
 from core.dbfunc import write_db, write_analisis_db
 from core.orders import close_total, get_order_info
 
-async def restart_symbol(symbol, estado, sl, timeop, pentrada, psalida, vcierre, balance, secuencia, resultado, ps):
-    fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
-    print(f"Proceso Cerrado para: {symbol} a causa de cierre automatico - {fechayhora}")
-  
 
-    write_analisis_db(
-        symbol      = symbol,
-        estado      = estado,
-        sl          = sl,
-        time_open   = timeop,
-        time_close  = fechayhora,
-        pe          = pentrada,
-        ps          = psalida,
-        vcierre     = round(vcierre, 2),
-        balance     = round(balance, 2),
-        resultado   = round(resultado, 2),
-        secuencia   = secuencia,
-    )
-    print(f"Analisis DB escrito con exito para: {symbol}")
-
-    
-    try:
-        from main_loop import  detener_socket, iniciar_socket_async # Hay que importarlo aca para que no haga importacion circular.
-        
-        detener_socket(symbol)
-
-        ps.auto_restart  = True
-
-        if ps.act_control_reinicio: iniciar_socket_async(symbol)
-
-        write_db([['0', 'RESTART', '', '', '', '', '', '', '', '', '', '', '', fechayhora]], symbol, ps.input_sl)
-        print(f"RESTART EXITOSO - {fechayhora}")
-
-
-    except ImportError:
-        print(f"RESTART NO EXITOSO - {fechayhora}")
-        pass  # Por si no la necesitas en modo simulación, o no está importada  
    
         
 
@@ -90,7 +54,6 @@ def Qty_min(symbol, currentprice):
     needed = min_notional / float(currentprice)   # cantidad por notional
     qty = math.ceil(needed / step) * step         # redondear hacia arriba al step
     return max(min_qty, qty)                      # respetar minQty
-
 
 
 def obtenerdecimales(symbol: str):

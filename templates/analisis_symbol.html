@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analisis</title>
+  <title>Análisis Símbolo</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -36,6 +36,7 @@
       font-weight: bold;
       margin-bottom: 16px;
       text-align: center;
+      text-transform: uppercase;
     }
 
     .card {
@@ -54,12 +55,14 @@
       margin-bottom: 12px;
     }
 
+    /* Grilla superior: ambas tarjetas con ancho similar a la izquierda */
     .top-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
       margin-bottom: 16px;
       align-items: start;
+      max-width: 800px; /* limita ambas tarjetas para que no se estiren */
     }
 
     table.tablafija {
@@ -97,13 +100,6 @@
       background: #f3f4f6;
       font-weight: bold;
     }
-
-    .message {
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .error   { color: var(--red);   font-weight: bold; }
-    .success { color: var(--green); font-weight: bold; }
 
     .stats-inline {
       display: flex;
@@ -161,7 +157,16 @@
 
     table.tabla-csv tbody tr:hover { background: #eef2ff; }
 
-    .td-ticker { cursor: pointer; color: var(--accent); }
+    .row-separator {
+      background-color: #f1f5f9;
+      height: 12px;
+    }
+    .row-separator td {
+      border: none;
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+    }
 
     .canvas-wrap { width: 100%; overflow-x: auto; }
 
@@ -180,8 +185,6 @@
       font-size: 13px;
     }
 
-    .hidden { display: none; }
-
     .mostrar-secuencia-btn {
       padding: 4px 10px;
       border-radius: 6px;
@@ -190,19 +193,6 @@
       color: #fff;
       cursor: pointer;
       font-size: 12px;
-    }
-
-    .search-box {
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      width: 220px;
-      margin-bottom: 8px;
-    }
-    .search-box:focus {
-      outline: none;
-      border-color: var(--accent);
     }
 
     .modal-secuencia-bg {
@@ -250,7 +240,7 @@
     }
 
     @media (max-width: 1000px) {
-      .top-grid { grid-template-columns: 1fr; }
+      .top-grid { grid-template-columns: 1fr; max-width: 100%; }
     }
   </style>
 </head>
@@ -258,13 +248,9 @@
 
 <div class="container">
 
-  <div class="page-title">ANÁLISIS</div>
+  <div class="page-title" id="pageTitle">Análisis del Símbolo</div>
 
-  <div class="card">
-    <div class="message" id="message">Cargando análisis...</div>
-  </div>
-
-  <div id="results" class="hidden">
+  <div id="results">
 
     <div class="top-grid">
 
@@ -279,7 +265,7 @@
               <th>Total</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="posTableBody"></tbody>
           <tfoot>
             <tr>
               <td>TOTAL</td>
@@ -295,44 +281,7 @@
         </div>
       </div>
 
-      <!-- COL 2: Detalles financieros -->
-      <div class="card">
-        <div class="card-title">Detalles financieros</div>
-        <table class="tablafija">
-          <tbody>
-            <tr>
-              <td>Capital Base</td>
-              <td><span id="fin_capital_base"></span></td>
-            </tr>
-            <tr>
-              <td>Pérdidas estimadas</td>
-              <td><span id="fin_perdidas_estimadas"></span></td>
-            </tr>
-            <tr>
-              <td>Capital arriesgado</td>
-              <td><span id="fin_capital_arriesgado"></span></td>
-            </tr>
-            <tr>
-              <td>Disponible para operar</td>
-              <td><span id="fin_disponible"></span></td>
-            </tr>
-            <tr>
-              <td>Balance actual</td>
-              <td><span id="fin_balance_actual"></span></td>
-            </tr>
-            <tr>
-              <td>Pnl actual</td>
-              <td><span id="fin_pnl_actual"></span></td>
-            </tr>
-            <tr>
-              <td>Balance vivo actual</td>
-              <td><span id="fin_balance_vivo"></span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- COL 3: Acumulado -->
+      <!-- COL 2: Acumulado -->
       <div class="card">
         <div class="card-title">Acumulado</div>
         <div class="stats-inline">
@@ -365,12 +314,10 @@
 
     <div class="card">
       <div class="card-title">Detalle de acumulado</div>
-      <input type="text" id="searchSymbol" class="search-box" placeholder="Buscar símbolo..." />
       <div class="tabla-csv-container">
         <table class="tabla-csv" id="accumulatedTable">
           <thead>
             <tr>
-              <th>Símbolo</th>
               <th>ID Pos</th>
               <th>Type</th>
               <th>POS</th>
@@ -389,48 +336,55 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="card-title">Movimientos</div>
+      <div class="tabla-csv-container">
+        <table class="tabla-csv" id="tablaCsv">
+          <thead>
+            <tr>
+              <th>ID Order</th><th>ID Pos</th><th>Type</th><th>Pos</th><th>PE</th><th>SL</th><th>R1</th><th>R2</th>
+              <th>Qty</th><th>V1R</th><th>PnL</th><th>Balance</th><th>Comision</th><th>Time</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <div id="modal-secuencia-bg" class="modal-secuencia-bg">
   <div class="modal-secuencia-content">
-    <button class="modal-secuencia-close" id="modalSecuenciaCloseBtn" title="Cerrar">&times;</button>
+    <button class="modal-secuencia-close" id="modalSecuenciaCloseBtn">&times;</button>
     <div class="modal-secuencia-title">Secuencia</div>
     <div class="modal-secuencia-text" id="modalSecuenciaText"></div>
   </div>
 </div>
 
 <script>
-  const message              = document.getElementById("message");
-  const results              = document.getElementById("results");
-  const searchSymbol         = document.getElementById("searchSymbol");
-  const cantidadTotalEl      = document.getElementById("cantidadTotal");
-  const maxPositiveEl        = document.getElementById("maxPositive");
-  const maxNegativeEl        = document.getElementById("maxNegative");
-  const finalAccumulatedEl   = document.getElementById("finalAccumulated");
-  const posTableBody         = document.querySelector("#posTable tbody");
-  const footCantidad         = document.getElementById("footCantidad");
-  const footTotal            = document.getElementById("footTotal");
-  const accumulatedTableBody = document.querySelector("#accumulatedTable tbody");
-  const canvas               = document.getElementById("chart");
-  const ctx                  = canvas.getContext("2d");
+  const urlParams = new URLSearchParams(window.location.search);
+  const ticker = (urlParams.get("ticker") || "ethusdt").toLowerCase();
+  document.getElementById("pageTitle").textContent = `Análisis Completo - ${ticker.toUpperCase()}`;
+  document.title = `Análisis ${ticker.toUpperCase()}`;
+
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
 
   const POS_FIXED = ["SL", "BE0", "BE1", "BE2"];
   const TS_PREFIX_MIN = 3;
   const TS_PREFIX_MAX = 20;
 
-  let lastAccumulatedData = [];
-
-  searchSymbol.addEventListener("input", filterAccumulatedTable);
-
   window.addEventListener("DOMContentLoaded", () => {
-    fetch("/analisis_data")
-      .then(res => {
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        return res.json();
-      })
+    cargarAnalisis();
+    cargarMovimientos();
+  });
+
+  function cargarAnalisis() {
+    fetch(`/analisis_data_symbol?ticker=${ticker}`)
+      .then(res => res.json())
       .then(rawData => {
-        if (!rawData.length) throw new Error("La tabla no contiene filas válidas.");
+        if (!rawData || !rawData.length) return;
 
         const rows = rawData.map(cols => ({
           symbol:    String(cols[0]).trim(),
@@ -446,20 +400,49 @@
           secuencia: String(cols[10]).trim()
         })).filter(r => isFinite(r.resultado));
 
-        const processed = processRows(rows);
-        renderResults(processed);
-
-        message.textContent = "Análisis cargado correctamente desde la base de datos.";
-        message.className = "message success";
-        results.classList.remove("hidden");
+        const data = processRows(rows);
+        renderAnalisisData(data);
       })
-      .catch(err => {
-        message.textContent = "Error al cargar análisis: " + err.message;
-        message.className = "message error";
-        results.classList.add("hidden");
-        clearUI();
-      });
-  });
+      .catch(err => console.error("Error al cargar análisis:", err));
+  }
+
+  function cargarMovimientos() {
+    fetch(`/movimientos_all?ticker=${ticker}`)
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#tablaCsv tbody');
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;">No hay movimientos registrados</td></tr>`;
+          return;
+        }
+
+        let lastIdPos = null;
+
+        data.forEach((row) => {
+          const currentIdPos = row[1] !== null ? String(row[1]).trim() : "";
+
+          if (lastIdPos !== null && currentIdPos !== lastIdPos) {
+            const separatorTr = document.createElement('tr');
+            separatorTr.className = 'row-separator';
+            separatorTr.innerHTML = `<td colspan="14"></td>`;
+            tbody.appendChild(separatorTr);
+          }
+
+          const tr = document.createElement('tr');
+          row.forEach(col => {
+            const td = document.createElement('td');
+            td.textContent = (col ?? '');
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+          lastIdPos = currentIdPos;
+        });
+      })
+      .catch(err => console.error("Error al cargar movimientos:", err));
+  }
 
   function safeNumber(value) {
     const n = parseFloat(String(value).trim());
@@ -486,7 +469,6 @@
 
     rows.forEach(row => {
       const posKey = row.pos.toUpperCase();
-
       if (posKey === "CM") {
         posSummary["CM"].cantidad += 1;
         posSummary["CM"].total   += row.resultado;
@@ -497,266 +479,113 @@
         posSummary["TS"].cantidad += 1;
         posSummary["TS"].total   += row.resultado;
       }
-
       accumulated += row.resultado;
       if (accumulated > maxPositive) maxPositive = accumulated;
       if (accumulated < maxNegative) maxNegative = accumulated;
-
-      accumulatedData.push({
-        symbol:    row.symbol,
-        id_pos:    row.id_pos,
-        type:      row.type,
-        pos:       row.pos,
-        timeOpen:  row.timeOpen,
-        timeClose: row.timeClose,
-        pe:        row.pe,
-        ps:        row.ps,
-        v1r:       row.v1r,
-        resultado: row.resultado,
-        acumulado: accumulated,
-        secuencia: row.secuencia
-      });
+      accumulatedData.push({ ...row, acumulado: accumulated });
     });
 
     if (maxPositive === Number.NEGATIVE_INFINITY) maxPositive = 0;
     if (maxNegative === Number.POSITIVE_INFINITY) maxNegative = 0;
 
-    return {
-      posSummary,
-      totalRegistros: rows.length,
-      accumulatedData,
-      maxPositive,
-      maxNegative,
-      finalAccumulated: accumulated
-    };
+    return { posSummary, totalRegistros: rows.length, accumulatedData, maxPositive, maxNegative, finalAccumulated: accumulated };
   }
 
-  function renderResults(data) {
-    cantidadTotalEl.textContent = data.totalRegistros;
+  function renderAnalisisData(data) {
+    document.getElementById("cantidadTotal").textContent = data.totalRegistros;
+    document.getElementById("maxPositive").textContent = formatNumber(data.maxPositive);
+    document.getElementById("maxNegative").textContent = formatNumber(data.maxNegative);
+    document.getElementById("finalAccumulated").textContent = formatNumber(data.finalAccumulated);
+    applyValueClass(document.getElementById("maxPositive"), data.maxPositive);
+    applyValueClass(document.getElementById("maxNegative"), data.maxNegative);
+    applyValueClass(document.getElementById("finalAccumulated"), data.finalAccumulated);
 
-    maxPositiveEl.textContent      = formatNumber(data.maxPositive);
-    maxNegativeEl.textContent      = formatNumber(data.maxNegative);
-    finalAccumulatedEl.textContent = formatNumber(data.finalAccumulated);
-    applyValueClass(maxPositiveEl,      data.maxPositive);
-    applyValueClass(maxNegativeEl,      data.maxNegative);
-    applyValueClass(finalAccumulatedEl, data.finalAccumulated);
-
-    renderPosTable(data.posSummary);
-
-    lastAccumulatedData = data.accumulatedData;
-    renderAccumulatedTable([...data.accumulatedData].reverse());
-    drawChart(data.accumulatedData);
-  }
-
-  function renderPosTable(posSummary) {
-    posTableBody.innerHTML = "";
-    let totalCantidad = 0;
-    let totalTotal    = 0;
-
-    const displayKeys = [...POS_FIXED, "TS", "CM"];
-
-    displayKeys.forEach(key => {
-      const { cantidad, total } = posSummary[key];
-      totalCantidad += cantidad;
-      totalTotal    += total;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(key)}</td>
-        <td>${cantidad}</td>
-        <td class="${getClassByValue(total)}">${formatNumber(total)}</td>
-      `;
-      posTableBody.appendChild(tr);
+    const posBody = document.getElementById("posTableBody");
+    posBody.innerHTML = "";
+    let tCant = 0, tTot = 0;
+    [...POS_FIXED, "TS", "CM"].forEach(key => {
+      const { cantidad, total } = data.posSummary[key];
+      tCant += cantidad; tTot += total;
+      posBody.innerHTML += `<tr><td>${key}</td><td>${cantidad}</td><td class="${getClassByValue(total)}">${formatNumber(total)}</td></tr>`;
     });
+    document.getElementById("footCantidad").textContent = tCant;
+    document.getElementById("footTotal").textContent = formatNumber(tTot);
+    document.getElementById("footTotal").className = getClassByValue(tTot);
 
-    footCantidad.textContent = totalCantidad;
-    footTotal.textContent    = formatNumber(totalTotal);
-    footTotal.className      = getClassByValue(totalTotal);
-  }
-
-  function renderAccumulatedTable(accumulatedData) {
-    accumulatedTableBody.innerHTML = "";
-
-    accumulatedData.forEach(item => {
+    const accBody = document.querySelector("#accumulatedTable tbody");
+    accBody.innerHTML = "";
+    [...data.accumulatedData].reverse().forEach(item => {
       const tr = document.createElement("tr");
-      tr.dataset.ticker = item.symbol.toLowerCase();
-
-      const symbolLower = item.symbol.toLowerCase();
-      const symbolUpper = item.symbol.toUpperCase();
-
       tr.innerHTML = `
-        <td class="td-ticker">${escapeHtml(symbolUpper)}</td>
-        <td>${escapeHtml(item.id_pos)}</td>
-        <td>${escapeHtml(item.type)}</td>
-        <td>${escapeHtml(item.pos)}</td>
-        <td>${escapeHtml(item.timeOpen)}</td>
-        <td>${escapeHtml(item.timeClose)}</td>
-        <td>${escapeHtml(item.pe)}</td>
-        <td>${escapeHtml(item.ps)}</td>
+        <td>${item.id_pos}</td>
+        <td>${item.type}</td>
+        <td>${item.pos}</td>
+        <td>${item.timeOpen}</td>
+        <td>${item.timeClose}</td>
+        <td>${item.pe}</td>
+        <td>${item.ps}</td>
         <td>${formatNumber(item.v1r)}</td>
         <td class="${getClassByValue(item.resultado)}">${formatNumber(item.resultado)}</td>
         <td class="${getClassByValue(item.acumulado)}">${formatNumber(item.acumulado)}</td>
+        <td><button class="mostrar-secuencia-btn" onclick="mostrarModalSecuencia('${item.secuencia || ''}')">Secuencia</button></td>
       `;
-
-      tr.querySelector(".td-ticker").addEventListener("click", function () {
-        window.open(`/analisis_symbol?ticker=${symbolLower}`, "_blank");
-      });
-
-      const tdSec = document.createElement("td");
-      const btn   = document.createElement("button");
-      btn.className   = "mostrar-secuencia-btn";
-      btn.textContent = "Secuencia";
-      btn.onclick = function () { mostrarModalSecuencia(item.secuencia || ''); };
-      tdSec.appendChild(btn);
-      tr.appendChild(tdSec);
-
-      accumulatedTableBody.appendChild(tr);
+      accBody.appendChild(tr);
     });
-  }
 
-  function filterAccumulatedTable() {
-    const filter = searchSymbol.value.trim().toLowerCase();
-    accumulatedTableBody.querySelectorAll("tr").forEach(tr => {
-      tr.style.display = (!filter || tr.dataset.ticker.includes(filter)) ? "" : "none";
-    });
+    drawChart(data.accumulatedData);
   }
 
   function drawChart(accumulatedData) {
-    const width   = canvas.width;
-    const height  = canvas.height;
-    const padding = 50;
-
+    const width = canvas.width, height = canvas.height, padding = 50;
     ctx.clearRect(0, 0, width, height);
-    if (!accumulatedData || accumulatedData.length === 0) return;
+    if (!accumulatedData.length) return;
 
     const values = accumulatedData.map(d => d.acumulado);
     const minVal = Math.min(...values, 0);
     const maxVal = Math.max(...values, 0);
-    let range    = maxVal - minVal;
+    let range = maxVal - minVal;
     if (range === 0) range = 1;
 
-    const chartWidth  = width  - padding * 2;
-    const chartHeight = height - padding * 2;
+    const chartWidth = width - padding * 2, chartHeight = height - padding * 2;
     const xStep = accumulatedData.length > 1 ? chartWidth / (accumulatedData.length - 1) : chartWidth;
+    const getX = (i) => padding + i * xStep;
+    const getY = (val) => padding + ((maxVal - val) / range) * chartHeight;
 
-    function getX(i)   { return padding + i * xStep; }
-    function getY(val) { return padding + ((maxVal - val) / range) * chartHeight; }
+    ctx.strokeStyle = "#e5e7eb"; ctx.fillStyle = "#6b7280"; ctx.font = "12px Arial";
+    for (let i = 0; i <= 5; i++) {
+      const y = padding + (chartHeight / 5) * i;
+      ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(width - padding, y); ctx.stroke();
+      ctx.fillText(formatNumber(maxVal - ((maxVal - minVal) / 5) * i), 8, y + 4);
+    }
 
     const zeroY = getY(0);
-    drawGridLines(width, height, padding, chartWidth, chartHeight, minVal, maxVal, zeroY);
-    drawAxes(width, height, padding);
+    ctx.strokeStyle = "#9ca3af"; ctx.beginPath(); ctx.moveTo(padding, zeroY); ctx.lineTo(width - padding, zeroY); ctx.stroke();
 
-    ctx.beginPath();
-    ctx.lineWidth   = 2;
-    ctx.strokeStyle = "#2563eb";
-    accumulatedData.forEach((point, i) => {
-      const x = getX(i);
-      const y = getY(point.acumulado);
-      if (i === 0) ctx.moveTo(x, y);
-      else         ctx.lineTo(x, y);
-    });
+    ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = "#2563eb";
+    accumulatedData.forEach((p, i) => { i === 0 ? ctx.moveTo(getX(i), getY(p.acumulado)) : ctx.lineTo(getX(i), getY(p.acumulado)); });
     ctx.stroke();
 
     if (accumulatedData.length <= 150) {
       ctx.fillStyle = "#2563eb";
-      accumulatedData.forEach((point, i) => {
-        ctx.beginPath();
-        ctx.arc(getX(i), getY(point.acumulado), 2.5, 0, Math.PI * 2);
-        ctx.fill();
+      accumulatedData.forEach((p, i) => {
+        ctx.beginPath(); ctx.arc(getX(i), getY(p.acumulado), 2.5, 0, Math.PI * 2); ctx.fill();
       });
     }
   }
 
-  function drawGridLines(width, height, padding, chartWidth, chartHeight, minVal, maxVal, zeroY) {
-    ctx.save();
-    ctx.strokeStyle = "#e5e7eb";
-    ctx.lineWidth   = 1;
-    ctx.fillStyle   = "#6b7280";
-    ctx.font        = "12px Arial";
-
-    const horizontalLines = 5;
-    for (let i = 0; i <= horizontalLines; i++) {
-      const y = padding + (chartHeight / horizontalLines) * i;
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(width - padding, y);
-      ctx.stroke();
-      const value = maxVal - ((maxVal - minVal) / horizontalLines) * i;
-      ctx.fillText(formatNumber(value), 8, y + 4);
-    }
-
-    ctx.strokeStyle = "#9ca3af";
-    ctx.beginPath();
-    ctx.moveTo(padding, zeroY);
-    ctx.lineTo(width - padding, zeroY);
-    ctx.stroke();
-
-    ctx.fillStyle = "#374151";
-    ctx.fillText("0", 30, zeroY - 6);
-    ctx.restore();
-  }
-
-  function drawAxes(width, height, padding) {
-    ctx.save();
-    ctx.strokeStyle = "#374151";
-    ctx.lineWidth   = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, height - padding);
-    ctx.lineTo(width - padding, height - padding);
-    ctx.stroke();
-    ctx.restore();
-  }
-
   function formatNumber(value) { return Number(value).toFixed(2); }
-
-  function getClassByValue(value) {
-    if (value > 0) return "positive";
-    if (value < 0) return "negative";
-    return "neutral";
-  }
-
+  function getClassByValue(value) { return value > 0 ? "positive" : (value < 0 ? "negative" : "neutral"); }
   function applyValueClass(el, value) {
     el.classList.remove("positive", "negative", "neutral");
     el.classList.add(getClassByValue(value));
-  }
-
-  function clearUI() {
-    posTableBody.innerHTML         = "";
-    accumulatedTableBody.innerHTML = "";
-    cantidadTotalEl.textContent    = "0";
-    footCantidad.textContent       = "0";
-    footTotal.textContent          = "0";
-    maxPositiveEl.textContent      = "0";
-    maxNegativeEl.textContent      = "0";
-    finalAccumulatedEl.textContent = "0";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    lastAccumulatedData = [];
-  }
-
-  function escapeHtml(text) {
-    return String(text)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
   }
 
   function mostrarModalSecuencia(texto) {
     document.getElementById('modalSecuenciaText').textContent = texto || '(Secuencia vacía)';
     document.getElementById('modal-secuencia-bg').classList.add('active');
   }
-  function cerrarModalSecuencia() {
-    document.getElementById('modal-secuencia-bg').classList.remove('active');
-  }
-  document.getElementById('modalSecuenciaCloseBtn').onclick = cerrarModalSecuencia;
-  document.getElementById('modal-secuencia-bg').onclick = function (e) {
-    if (e.target === this) cerrarModalSecuencia();
-  };
-  document.addEventListener('keydown', function (e) {
-    if (e.key === "Escape") cerrarModalSecuencia();
-  });
+  document.getElementById('modalSecuenciaCloseBtn').onclick = () => document.getElementById('modal-secuencia-bg').classList.remove('active');
+  document.getElementById('modal-secuencia-bg').onclick = function(e) { if(e.target===this) this.classList.remove('active'); };
 </script>
 
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APP</title>
+    <title>POS</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
@@ -132,7 +132,7 @@
                 <form id="mainForm" action="/mainstart" method="POST" enctype="multipart/form-data">
                     <td>V1R <input type="text" name="USDT1r" value="5" size="4"></td>
                     <td>P2R <input type="text" name="p2r" value="5" size="4"></td>
-                    <td>Modo <select name="modo_post_form" style="width: 70px;"><option value="1" selected>Real</option><option value="2">Simular</option></select></td>
+                    
 
                    <input type="hidden" name="ticker" id="general_ticker">
                    <input type="hidden" name="send" id="general_send">
@@ -166,13 +166,14 @@
             <td>Ticker</td>
             <td>Estado</td>
             <td>Iniciar</td>
-            <td>Abrir</td>
             <td>PE</td>
             <td>PA</td>
             <td>%</td>
-            <td>% Rdo.</td>
-            <td>V. Total</td>
-            <td>Posicion</td>
+            <td>Pnl</td>
+            <td>BE</td>
+            <td>V1R</td>
+            <td>Balance</td>
+            <td>Pos</td>
             <td>Fecha Inicio</td>
             <td>Detener</td>
         </thead>
@@ -196,22 +197,25 @@ function generarFilasTabla(simbolos) {
         let nombre = simbolo.replace('usdt', '').toUpperCase();
         html += `
         <tr>
-            <td>${nombre}</td>
-            <td><span id="estado-${simbolo}"></span></td>
+            <td style="cursor: pointer;" onclick="window.open('/main?ticker=${simbolo}', '_blank')">${nombre}</td>
+            <td><span id="${simbolo}_ps_estado_soket"></span></td>
              <td><button type="button" onclick="enviarGeneral('${simbolo}', 'iniciar')">INICIAR</button></td>
-            <td><button name="button" onclick="window.open('/main?ticker=${simbolo}', '_blank')">ABRIR</button></td>
             <td><span id="${simbolo}_fd_r0"></span></td>
             <td><span id="${simbolo}_Cprecio"></span></td>
-            <td><span id="${simbolo}_percentsl"></span></td>
-            <td><span id="${simbolo}_percentsl"></span></td>
-            <td><span id="${simbolo}_sd_ValorPuro_Tot"></span></td>
-            <td><span id="${simbolo}_sd_posicion"></span></td>
-            <td><span id="${simbolo}_sd_fechainicio"></span></td>
+            <td><span id="${simbolo}_rt_posicion_porc"></span></td>
+            <td><span id="${simbolo}_rt_pnl_vivo"></span></td>
+            <td><span id="${simbolo}_rt_BE_pos"></span></td>
+            <td><span id="${simbolo}_ps_USDT1r"></span></td>
+            <td><span id="${simbolo}_rt_balance"></span></td>
+            <td><span id="${simbolo}_rt_ALGO_pos"></span></td>
+            <td><span id="${simbolo}_fd_fechainicio"></span></td>
             <td><button name="button" onclick="window.location.href='/stopsocket?ticker=${simbolo}'">DETENER</button></td>
         </tr>
         `;
     });
     return html;
+
+
 }
 document.getElementById('tbody-simbolos').innerHTML = generarFilasTabla(simbolos);
 
@@ -221,138 +225,7 @@ document.getElementById('tbody-simbolos').innerHTML = generarFilasTabla(simbolos
         document.getElementById('mainForm').submit();
     }
 
-        
-        
-        function actualizarEstadoThreads() {
-            fetch('/socket_status')
-                .then(res => res.json())
-                .then(data => {
-                    const ethEstado = data["ethusdt"] ? "Activo" : "Inactivo";
-                    const btcEstado = data["btcusdt"] ? "Activo" : "Inactivo";
-                    const bnbEstado = data["bnbusdt"] ? "Activo" : "Inactivo";
-                    const solEstado = data["solusdt"] ? "Activo" : "Inactivo";
-                    const xrpEstado = data["xrpusdt"] ? "Activo" : "Inactivo";
-                    const trxEstado = data["trxusdt"] ? "Activo" : "Inactivo";
-                    const avaxEstado = data["avaxusdt"] ? "Activo" : "Inactivo";
-                    const tonEstado = data["tonusdt"] ? "Activo" : "Inactivo";
-                    const ltcEstado = data["ltcusdt"] ? "Activo" : "Inactivo";
-                    const shibEstado = data["1000shibusdt"] ? "Activo" : "Inactivo";
-                    const dogeEstado = data["dogeusdt"] ? "Activo" : "Inactivo";
-                    const adaEstado = data["adausdt"] ? "Activo" : "Inactivo";
-                    const xlmEstado = data["xlmusdt"] ? "Activo" : "Inactivo";
-                    const xmrEstado = data["xmrusdt"] ? "Activo" : "Inactivo";
-                    const dotEstado = data["dotusdt"] ? "Activo" : "Inactivo";
-                    const uniEstado = data["uniusdt"] ? "Activo" : "Inactivo";
-                    const aptEstado = data["aptusdt"] ? "Activo" : "Inactivo";
-                    const nearEstado = data["nearusdt"] ? "Activo" : "Inactivo";
-                    const fetEstado = data["fetusdt"] ? "Activo" : "Inactivo";
-                    const arbEstado = data["arbusdt"] ? "Activo" : "Inactivo";
-                    const hyperEstado = data["hyperusdt"] ? "Activo" : "Inactivo";
-                    const suiEstado = data["suiusdt"] ? "Activo" : "Inactivo";
-                    const bchEstado = data["bchusdt"] ? "Activo" : "Inactivo";
-                    const linkEstado = data["linkusdt"] ? "Activo" : "Inactivo";
-                    const hbarEstado = data["hbarusdt"] ? "Activo" : "Inactivo";
-                    const pepeEstado = data["1000pepeusdt"] ? "Activo" : "Inactivo";
-                    const aaveEstado = data["aaveusdt"] ? "Activo" : "Inactivo";
-                    const taoEstado = data["taousdt"] ? "Activo" : "Inactivo";
-                    const icpEstado = data["icpusdt"] ? "Activo" : "Inactivo";
-                    const etcEstado = data["etcusdt"] ? "Activo" : "Inactivo";
-                    const ondoEstado     = data["ondousdt"]     ? "Activo" : "Inactivo";
-                    const kasEstado      = data["kasusdt"]      ? "Activo" : "Inactivo";
-                    const atomEstado     = data["atomusdt"]     ? "Activo" : "Inactivo";
-                    const vetEstado      = data["vetusdt"]      ? "Activo" : "Inactivo";
-                    const renderEstado   = data["renderusdt"]   ? "Activo" : "Inactivo";
-                    const enaEstado      = data["enausdt"]      ? "Activo" : "Inactivo";
-                    const filEstado      = data["filusdt"]      ? "Activo" : "Inactivo";
-                    const wldEstado      = data["wldusdt"]      ? "Activo" : "Inactivo";
-                    const algoEstado     = data["algousdt"]     ? "Activo" : "Inactivo";
-                    const qntEstado      = data["qntusdt"]      ? "Activo" : "Inactivo";
-                    const seiEstado      = data["seiusdt"]      ? "Activo" : "Inactivo";
-                    const jupEstado      = data["jupusdt"]      ? "Activo" : "Inactivo";
-                    const spxEstado      = data["spxusdt"]      ? "Activo" : "Inactivo";
-                    const injEstado      = data["injusdt"]      ? "Activo" : "Inactivo";
-                    const tiaEstado      = data["tiausdt"]      ? "Activo" : "Inactivo";
-                    const virtualEstado  = data["virtualusdt"]  ? "Activo" : "Inactivo";
-                    const stxEstado      = data["stxusdt"]      ? "Activo" : "Inactivo";
-                    const opEstado       = data["opusdt"]       ? "Activo" : "Inactivo";
-                    const penguEstado    = data["penguusdt"]    ? "Activo" : "Inactivo";
-                    const iotaEstado      = data["iotausdt"]      ? "Activo" : "Inactivo";
-                    const imxEstado      = data["imxusdt"]      ? "Activo" : "Inactivo";
-                    const grt2Estado     = data["grtusdt"]      ? "Activo" : "Inactivo";
-                    const ipEstado       = data["ipusdt"]       ? "Activo" : "Inactivo";
-                    const cakeEstado     = data["cakeusdt"]     ? "Activo" : "Inactivo";
-                    const jtoEstado      = data["jtousdt"]      ? "Activo" : "Inactivo";
-                    const crvEstado      = data["crvusdt"]      ? "Activo" : "Inactivo";
-                    const thetaEstado    = data["thetausdt"]    ? "Activo" : "Inactivo";
-                    const ldoEstado      = data["ldousdt"]      ? "Activo" : "Inactivo";
-                    const galaEstado     = data["galausdt"]     ? "Activo" : "Inactivo";
-                    const zecEstado      = data["zecusdt"]      ? "Activo" : "Inactivo";
-        
-                    document.getElementById("estado-ethusdt").innerText = ethEstado;
-                    document.getElementById("estado-btcusdt").innerText = btcEstado;
-                    document.getElementById("estado-bnbusdt").innerText = bnbEstado;
-                    document.getElementById("estado-solusdt").innerText = solEstado;
-                    document.getElementById("estado-xrpusdt").innerText = xrpEstado;
-                    document.getElementById("estado-trxusdt").innerText = trxEstado;
-                    document.getElementById("estado-avaxusdt").innerText = avaxEstado;
-                    document.getElementById("estado-tonusdt").innerText = tonEstado;
-                    document.getElementById("estado-ltcusdt").innerText = ltcEstado;
-                    document.getElementById("estado-1000shibusdt").innerText = shibEstado;
-                    document.getElementById("estado-dogeusdt").innerText = dogeEstado;
-                    document.getElementById("estado-adausdt").innerText = adaEstado;
-                    document.getElementById("estado-xlmusdt").innerText = xlmEstado;
-                    document.getElementById("estado-xmrusdt").innerText = xmrEstado;
-                    document.getElementById("estado-dotusdt").innerText = dotEstado;
-                    document.getElementById("estado-uniusdt").innerText = uniEstado;
-                    document.getElementById("estado-aptusdt").innerText = aptEstado;
-                    document.getElementById("estado-nearusdt").innerText = nearEstado;
-                    document.getElementById("estado-fetusdt").innerText = fetEstado;
-                    document.getElementById("estado-arbusdt").innerText = arbEstado;
-                    document.getElementById("estado-hyperusdt").innerText = hyperEstado;
-                    document.getElementById("estado-suiusdt").innerText = suiEstado;
-                    document.getElementById("estado-bchusdt").innerText = bchEstado;
-                    document.getElementById("estado-linkusdt").innerText = linkEstado;
-                    document.getElementById("estado-hbarusdt").innerText = hbarEstado;
-                    document.getElementById("estado-1000pepeusdt").innerText = pepeEstado;
-                    document.getElementById("estado-aaveusdt").innerText = aaveEstado;
-                    document.getElementById("estado-taousdt").innerText = taoEstado;
-                    document.getElementById("estado-icpusdt").innerText = icpEstado;
-                    document.getElementById("estado-etcusdt").innerText = etcEstado;
-                    document.getElementById("estado-ondousdt").innerText    = ondoEstado;
-                    document.getElementById("estado-kasusdt").innerText     = kasEstado;
-                    document.getElementById("estado-atomusdt").innerText    = atomEstado;
-                    document.getElementById("estado-vetusdt").innerText     = vetEstado;
-                    document.getElementById("estado-renderusdt").innerText  = renderEstado;
-                    document.getElementById("estado-enausdt").innerText     = enaEstado;
-                    document.getElementById("estado-filusdt").innerText     = filEstado;
-                    document.getElementById("estado-wldusdt").innerText     = wldEstado;
-                    document.getElementById("estado-algousdt").innerText    = algoEstado;
-                    document.getElementById("estado-qntusdt").innerText     = qntEstado;
-                    document.getElementById("estado-seiusdt").innerText     = seiEstado;
-                    document.getElementById("estado-jupusdt").innerText     = jupEstado;
-                    document.getElementById("estado-spxusdt").innerText     = spxEstado;
-                    document.getElementById("estado-injusdt").innerText     = injEstado;
-                    document.getElementById("estado-tiausdt").innerText     = tiaEstado;
-                    document.getElementById("estado-virtualusdt").innerText = virtualEstado;
-                    document.getElementById("estado-stxusdt").innerText     = stxEstado;
-                    document.getElementById("estado-opusdt").innerText      = opEstado;
-                    document.getElementById("estado-penguusdt").innerText   = penguEstado;
-                    document.getElementById("estado-iotausdt").innerText     = iotaEstado;
-                    document.getElementById("estado-imxusdt").innerText     = imxEstado;
-                    document.getElementById("estado-grtusdt").innerText     = grt2Estado;
-                    document.getElementById("estado-ipusdt").innerText      = ipEstado;
-                    document.getElementById("estado-cakeusdt").innerText    = cakeEstado;
-                    document.getElementById("estado-jtousdt").innerText     = jtoEstado;
-                    document.getElementById("estado-crvusdt").innerText     = crvEstado;
-                    document.getElementById("estado-thetausdt").innerText   = thetaEstado;
-                    document.getElementById("estado-ldousdt").innerText     = ldoEstado;
-                    document.getElementById("estado-galausdt").innerText    = galaEstado;
-                    document.getElementById("estado-zecusdt").innerText     = zecEstado;
-                });
-        } 
-        window.addEventListener("DOMContentLoaded", actualizarEstadoThreads);
-
-    
+           
             
    function actualizarPControl() {
     fetch('/datos_PControl')

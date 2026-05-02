@@ -8,6 +8,7 @@ import requests
 import pandas as pd
 import sqlite3
 import time
+from main_loop import iniciar_asyncio_orderupdate
 
 import main_loop
 from core.orders import prueba_conexion
@@ -58,7 +59,8 @@ def dat_fixed():
         'fd_pnl1_r': fd.pnl1_r,
         'fd_pnl1r': fd.pnl1r,
         'fd_pnl2r': fd.pnl2r,
-        'fd_mensaje': fd.mensaje
+        'fd_mensaje': fd.mensaje,
+        
              
     })
 
@@ -78,7 +80,13 @@ def datos():
     fd = getattr(main_loop, f"{ticker}fd")  
     
     return jsonify({
-        'precio_banda': fd.r0,
+        'rt_BE_pos': rt.BE_pos,
+        'rt_r_ts': rt.r_ts,
+        'rt_r_1': rt.r_1 ,
+        'rt_balance': round(rt.balance,2),
+        'rt_posicion_porc': rt.posicion_porc,
+        'rt_balance_vivo': round(rt.balance,2),
+        'rt_pnl_vivo': rt.pnl_vivo,
         
     })
 
@@ -102,7 +110,15 @@ def datos_PControl():
 
         resultado[ticker] = {
             'fd_r0': fd.r0,
-            'Cprecio': rt.current_price
+            'Cprecio': rt.current_price,
+            'rt_posicion_porc': rt.posicion_porc,
+            'rt_pnl_vivo': rt.pnl_vivo,
+            'rt_BE_pos': rt.BE_pos,
+            'ps_USDT1r': ps.USDT1r,
+            'rt_balance': round(rt.balance,2),
+            'rt_ALGO_pos': rt.ALGO_pos,
+            'fd_fechainicio': fd.fechainicio,
+            'ps_estado_soket': ps.estado_soket,
                  
         }       
     return jsonify(resultado)
@@ -111,36 +127,38 @@ def datos_PControl():
 @app.route('/stopsocket')
 async def detener_socket():  
     ticker = request.args.get("ticker").lower()
-    main_loop.detener_socket(ticker)
-    main_loop.var_restart([ticker]) #Llama al reset solo cuando se llama al endpoint desde el boton detener.
+    ps  = getattr(main_loop, f"{ticker}ps")
+    rt = getattr(main_loop, f"{ticker}rt")
+    fd = getattr(main_loop, f"{ticker}fd")  
+    rt.detener_cm = True
+    await main_loop.detener_socket(ticker, ps, fd, rt)
+    main_loop.var_restart([ticker]) 
     ps = getattr(main_loop, f"{ticker}ps")
+    ps.reset()
 
     return Response(status=204) 
-
-@app.route('/socket_status')
-def socket_status():
-    return main_loop.symbol_status()
 
 
 @app.route('/analisis')
 def analisis_open():
     return render_template('analisis.html')
-    
 
+@app.route('/analisis_symbol')
+def analisis_symbol():
+    return render_template('analisis_symbol.html')
+    
 @app.route('/mainstart', methods=['POST'])
 def start_trading():
     ticker = request.form.get("ticker").lower()
     ps = getattr(main_loop, f"{ticker}ps")  
     ps.USDT1r = float(request.form.get('USDT1r'))
     ps.p2r = float(request.form.get('p2r'))
-    
+    ps.estado_soket = True    
     
     if (request.form.get('send')) == 'iniciar': main_loop.iniciar_socket_async(ticker)
 
     return Response(status=204) 
 
-
-    return Response(status=204)
 
 
 
@@ -159,33 +177,38 @@ if not any(isinstance(f, NoisyRequestFilter) for f in werkzeug_logger.filters):
 
 
 ################################ LECTURA DATABASE ################################
-@app.route('/movimientos')
+@app.route('/movimientos') #Consulta para main_loop.html
 def movimientos():
     ticker = (request.args.get("ticker") or "").lower().strip()
-
+ 
     conn = sqlite3.connect("static/data/data.db")
     cur = conn.cursor()
     cur.execute("""
-        SELECT id_order, type, pe, sl, r0, r1, r2, qty,
+        SELECT id_order, type, pos, pe, sl, r1, r2, qty,
                v1r, pnl, balance, comision, time
         FROM movimientos
         WHERE lower(trim(symbol)) = lower(trim(?))
+          AND id_pos = (
+              SELECT MAX(id_pos)
+              FROM movimientos
+              WHERE lower(trim(symbol)) = lower(trim(?))
+          )
         ORDER BY pk ASC
-    """, (ticker,))
+    """, (ticker, ticker))
     filas = cur.fetchall()
     conn.close()
-
+ 
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
 
 
-@app.route('/analisis_data')
+@app.route('/analisis_data') #Consulta para analisis.html
 def analisis_data():
     conn = sqlite3.connect("static/data/data.db")
     cur = conn.cursor()
     cur.execute("""
-        SELECT symbol, estado, sl, time_open, time_close,
-               pe, ps, vcierre, balance, resultado, secuencia
+        SELECT symbol, id_pos, type, pos, time_open, time_close,
+               pe, ps, v1r, resultado, secuencia
         FROM analisis
         ORDER BY pk ASC
     """)
@@ -194,15 +217,44 @@ def analisis_data():
 
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
+@app.route('/analisis_data_symbol') #Consulta para analisis_symbol.html
+def analisis_data_symbol():
+    ticker = (request.args.get("ticker") or "").lower().strip()
+    conn = sqlite3.connect("static/data/data.db")
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT symbol, id_pos, type, pos, time_open, time_close,
+               pe, ps, v1r, resultado, secuencia
+        FROM analisis
+        WHERE lower(trim(symbol)) = ?
+        ORDER BY pk ASC
+    """, (ticker,))
+    filas = cur.fetchall()
+    conn.close()
+    return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
+
+
+@app.route('/movimientos_all') #Consulta para analisis_symbol.html
+def movimientos_all():
+    ticker = (request.args.get("ticker") or "").lower().strip()
+    conn = sqlite3.connect("static/data/data.db")
+    cur = conn.cursor()
+    # id_order es índice 0, id_pos es índice 1
+    cur.execute("""
+        SELECT id_order, id_pos, type, pos, pe, sl, r1, r2, qty,
+               v1r, pnl, balance, comision, time
+        FROM movimientos
+        WHERE lower(trim(symbol)) = ?
+        ORDER BY CAST(id_pos AS INTEGER) ASC, pk ASC
+    """, (ticker,))
+    filas = cur.fetchall()
+    conn.close()
+    return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
 
 if __name__ == '__main__':
-    t = threading.Thread(target=main_loop.iniciar_asyncio_loop)
-    t.daemon = True
-    t.start()
-    time.sleep(1)
-    main_loop.iniciar_user_stream_async()
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True, use_reloader=False)
-
+    daemon_thread = threading.Thread(target=iniciar_asyncio_orderupdate, daemon=True)
+    daemon_thread.start()
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
 
