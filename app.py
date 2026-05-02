@@ -4,6 +4,7 @@ import re
 import logging
 import requests
 import sqlite3
+import time as _time
 from main_loop import iniciar_asyncio_orderupdate, symbol_list
 
 import main_loop
@@ -92,7 +93,7 @@ def datos():
 def datos_PControl():
     resultado = {}
 
-    for ticker in tickers:
+    for ticker in symbol_list: 
         ps  = getattr(main_loop, f"{ticker}ps")
         rt = getattr(main_loop, f"{ticker}rt")
         fd = getattr(main_loop, f"{ticker}fd")  

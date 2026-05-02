@@ -2,6 +2,7 @@ import os
 import asyncio
 import hmac
 import hashlib
+import time as _time
 from urllib.parse import urlencode
 import requests
 from binance.client import Client
