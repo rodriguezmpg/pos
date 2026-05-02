@@ -1,12 +1,6 @@
-from datetime import datetime
-import time
-from binance.client import Client
-from binance.enums import *
-from dotenv import load_dotenv
 import sqlite3
 
 from core.dbfunc import write_db, write_analisis_db
-from core.utils import Qty_min
 from core.orders import close_total, order_market, get_order_info, order_tp_market, order_sl_stop_market, cancel_algo_order
 
 

@@ -1,13 +1,5 @@
-from datetime import datetime
-import csv
 import math
-import time
 import requests
-from datetime import datetime, timezone
-import pandas as pd
-
-from core.dbfunc import write_db, write_analisis_db
-from core.orders import close_total, get_order_info
 
 
    

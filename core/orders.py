@@ -1,17 +1,12 @@
 import os
-import json
 import asyncio
 import hmac
 import hashlib
-import time as _time
 from urllib.parse import urlencode
-
 import requests
-import websockets
 from binance.client import Client
 from binance.enums import *
 from dotenv import load_dotenv
-import time
 
 from core.classes import OrderError
 
@@ -141,11 +136,6 @@ async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=1):
             await asyncio.sleep(wait_seconds)
     raise Exception(f"No se encontró la orden {id_order} después de {max_attempts} intentos.")
 
-
-async def get_order_pnl(symbol):
-    trades = client.futures_account_trades(symbol=symbol)
-    ultimo_trade = trades[-1]
-    return float(ultimo_trade['realizedPnl'])
 
 
 async def close_total(symbol):

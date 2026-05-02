@@ -1,14 +1,10 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, send_from_directory, Response
+from flask import Flask, render_template, jsonify, request, Response
 import threading
 import re 
-import asyncio
 import logging
-import os
 import requests
-import pandas as pd
 import sqlite3
-import time
-from main_loop import iniciar_asyncio_orderupdate
+from main_loop import iniciar_asyncio_orderupdate, symbol_list
 
 import main_loop
 from core.orders import prueba_conexion
@@ -93,14 +89,6 @@ def datos():
 
 @app.route('/datos_PControl') #Datos para el panel de control de index
 def datos_PControl():
-    # Lista de los tickers que manejas
-    tickers = ["ethusdt", "btcusdt", "bnbusdt", "solusdt", "xrpusdt", "trxusdt", "avaxusdt", "tonusdt", "ltcusdt",
-               "1000shibusdt", "dogeusdt","adausdt","xlmusdt","xmrusdt","dotusdt","uniusdt","aptusdt","nearusdt",
-               "fetusdt","arbusdt","hyperusdt","suiusdt","bchusdt","linkusdt","hbarusdt","1000pepeusdt","aaveusdt",
-               "taousdt","icpusdt","etcusdt","ondousdt", "kasusdt", "atomusdt", "vetusdt", "renderusdt", "enausdt", 
-               "filusdt", "wldusdt", "algousdt", "qntusdt",
-                "seiusdt", "jupusdt", "spxusdt", "injusdt", "tiausdt", "virtualusdt", "stxusdt", "opusdt", "penguusdt", "iotausdt",
-                "imxusdt", "grtusdt", "ipusdt", "cakeusdt", "jtousdt", "crvusdt", "thetausdt", "ldousdt", "galausdt", "zecusdt"]
     resultado = {}
 
     for ticker in tickers:
