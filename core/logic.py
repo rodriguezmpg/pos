@@ -199,7 +199,7 @@ async def r_1(symbol, ps, fd, rt):
     Data_db= [
             [
             rt.ALGO_orderid,
-            fd.id_pos,
+            rt.id_order_r_1,
             fd.type_pos,
             ALGO_pos,
             round(rt.ALGO_PE, fd.dec_precio),
@@ -218,7 +218,7 @@ async def r_1(symbol, ps, fd, rt):
 
     write_analisis_db(
         symbol      = symbol,
-        id_pos      = fd.id_pos,
+        id_pos      = rt.id_order_r_1,
         type_pos    = fd.type_pos,
         pos         = ALGO_pos,
         time_open   = fd.fechainicio,
