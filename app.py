@@ -318,16 +318,15 @@ def analisis_browse_data():
 ##### DESCARGAR Y SAUBIR BD
 from fastapi.responses import FileResponse
 
-@app.get("/download-db")
+@app.route("/download-db")
 def download_db():
-    return FileResponse("/var/data/data.db", filename="data.db")
+    return send_file("/var/data/data.db", as_attachment=True, download_name="data.db")
 
-@app.post("/upload-db")
-async def upload_db(file: UploadFile = File(...)):
-    with open("/var/data/data.db", "wb") as f:
-        f.write(await file.read())
+@app.route("/upload-db", methods=["POST"])
+def upload_db():
+    file = request.files["file"]
+    file.save("/var/data/data.db")
     return {"ok": True}
-
 
 
 if __name__ == '__main__':
