@@ -54,6 +54,7 @@ async def calculos(symbol, datasocket):
    
 
     if reinicio[symbol]: #reinicio las variables un sola vez
+        reinicio[symbol] = False  #importante que este primero antes de los await
         var_restart([symbol])
         rt.current_price = float(datasocket['c'])
         fd.r0 = rt.current_price
@@ -65,7 +66,7 @@ async def calculos(symbol, datasocket):
         
         print(f"Grillas listas para {symbol} - {rt.fechayhora}")
         
-        reinicio[symbol] = False  
+        
 
 
     if rt.current_price != rt.previous_price:
