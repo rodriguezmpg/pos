@@ -3,13 +3,15 @@ import asyncio
 import websockets
 import json
 import traceback
-
+import os
 
 from core.orders import get_listen_key
 from core.classes import DataPost, FixedData, RealTime, OrderError, Global
 from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
 
+
+TESTNET = os.getenv("BINANCE_TESTNET", "false").lower() == "true"
 
 
 symbol_list = ["ethusdt", "btcusdt", "bnbusdt", "solusdt", "xrpusdt", "trxusdt", "avaxusdt", "tonusdt", "ltcusdt",
@@ -81,7 +83,8 @@ event_loop = None
 async def start_socket(symbol):
     global reinicio
     reinicio[symbol] = True
-    url = f"wss://fstream.binance.com/market/ws/{symbol}@ticker"
+    if TESTNET: url = f"wss://stream.binancefuture.com/ws/{symbol}@ticker"
+    else: url = f"wss://fstream.binance.com/market/ws/{symbol}@ticker"
     print(f"[SOCKET] WebSocket iniciado para: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
     while True:
         try:
@@ -151,6 +154,10 @@ def iniciar_asyncio_orderupdate():
 
     loop.run_forever()
 
+
+
+
+
 async def start_user_data_socket_order_update():
 
     while True:
@@ -158,7 +165,8 @@ async def start_user_data_socket_order_update():
             listen_key = await asyncio.to_thread(get_listen_key)
             # Nos aseguramos de pedir todos los eventos posibles en el endpoint private
             eventos = "ORDER_TRADE_UPDATE/ALGO_UPDATE/ACCOUNT_CONFIG_UPDATE"
-            url = f"wss://fstream.binance.com/private/ws?listenKey={listen_key}&events={eventos}"
+            if TESTNET: url = f"wss://stream.binancefuture.com/ws/{listen_key}"
+            else: url = f"wss://fstream.binance.com/private/ws?listenKey={listen_key}&events={eventos}"
             
             async with websockets.connect(url) as ws:
                 print("[GENERAL SOCKET] Conectado")
@@ -211,6 +219,6 @@ async def start_user_data_socket_order_update():
 
         except Exception as e:
             print(f"[USER SOCKET ERROR] Reintentando... {e}")
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
 
 

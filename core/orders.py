@@ -13,12 +13,18 @@ from core.classes import OrderError
 
 
 load_dotenv()
+TESTNET = os.getenv("BINANCE_TESTNET", "false").lower() == "true"
 
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
-client = Client(API_KEY, API_SECRET, tld='com')
+if TESTNET:
+    API_KEY = os.getenv("BINANCE_TESTNET_API_KEY")
+    API_SECRET = os.getenv("BINANCE_TESTNET_API_SECRET")
+else:
+    API_KEY = os.getenv("BINANCE_API_KEY")
+    API_SECRET = os.getenv("BINANCE_API_SECRET")
 
-FUTURES_BASE = "https://fapi.binance.com"
+
+FUTURES_BASE = "https://testnet.binancefuture.com" if TESTNET else "https://fapi.binance.com"
+client = Client(API_KEY, API_SECRET, tld='com', testnet=TESTNET)
 
 
 def _sign(params: dict) -> str:
@@ -56,6 +62,12 @@ def _algo_order_post(params: dict) -> dict:
 async def order_market(symbol: str, side: str, quantity: float, reduce: bool = False):
     """MARKET sigue yendo por el endpoint clásico /fapi/v1/order."""
     try:
+        if not reduce: #si hay una posicion abierta para ese simbolo no va abrir una nueva.
+            positions = client.futures_position_information(symbol=symbol)
+
+            if any(float(p.get('positionAmt', 0)) != 0 for p in positions):
+                print(f"[order_market] Ya hay posición abierta para {symbol}, se omite la orden.")
+                return None
         order = client.futures_create_order(
             symbol=symbol,
             side=side,
@@ -221,9 +233,20 @@ def get_listen_key(): #para escucha de cambios en ordenes condicionales
     return resp.json()["listenKey"]
 
 
+
+
+_ultima_prueba = 0
 def prueba_conexion():
+    global _ultima_prueba
+    ahora = _time.time()
+    
+    # No probar más de una vez cada 60 segundos
+    if ahora - _ultima_prueba < 60:
+        return True  # asumir que está bien
+    
     try:
-        info = client.futures_account()
+        client.futures_ping()  # ← ping pesa mucho menos que futures_account()
+        _ultima_prueba = ahora
         return True
     except Exception as e:
         print(f"No se pudo conectar a Binance. Motivo: {e}")

@@ -108,41 +108,7 @@ def datos_analisis():
         'gl_balance_vivo': round(gl.balance_vivo,2),
     })
 
-@app.route('/test_write_movimiento', methods=['GET', 'POST'])
-def test_write_movimiento():
-    """
-    Inserta una fila de prueba fija en la tabla 'movimientos' sin pedir parámetros.
-    Útil para verificar que la DB está escribiendo correctamente.
-    """
-    from core.dbfunc import write_db
 
-    timestamp = _time.strftime('%Y-%m-%d %H:%M:%S', _time.gmtime())
-
-    # Fila con 14 columnas esperadas por write_db:
-    Data_csv = [[
-        "TEST_ORDER",   # id_order
-        1,              # id_pos
-        "TEST",         # type
-        "R0",           # pos
-        "",             # pe -> NULL
-        "",             # sl -> NULL
-        "",             # r1 -> NULL
-        "",             # r2 -> NULL
-        "",             # qty -> NULL
-        "",             # v1r -> NULL
-        0.0,            # pnl
-        0.0,            # balance
-        0.0,            # comision
-        timestamp       # time
-    ]]
-
-    try:
-        write_db(Data_csv, "testsym")
-        return jsonify({'ok': True, 'symbol': 'testsym', 'time': timestamp}), 201
-    except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
-
-   
 
 
 @app.route('/datos_PControl') #Datos para el panel de control de index
@@ -306,6 +272,53 @@ def movimientos_all():
     filas = cur.fetchall()
     conn.close()
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
+
+
+@app.route('/registro')
+def registro():
+    return render_template('registro.html')
+@app.route('/registro_data')
+def registro_data():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT symbol, pos, pnl, comision, time
+        FROM movimientos
+        ORDER BY pk DESC
+    """)
+    filas = cur.fetchall()
+    conn.close()
+    return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
+
+
+@app.route('/movimientos_browse')
+def movimientos_browse():
+    return render_template('movimientos_browse.html')
+@app.route('/movimientos_browse_data')
+def movimientos_browse_data():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT pk, symbol, id_order, id_pos, type, pos, pe, sl, r1, r2, qty, v1r, pnl, balance, comision, time FROM movimientos ORDER BY pk DESC")
+    filas = cur.fetchall()
+    conn.close()
+    return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
+
+@app.route('/analisis_browse')
+def analisis_browse():
+    return render_template('analisis_browse.html')
+@app.route('/analisis_browse_data')
+def analisis_browse_data():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT pk, symbol, id_pos, type, pos, time_open, time_close, pe, ps, v1r, resultado, secuencia FROM analisis ORDER BY pk DESC")
+    filas = cur.fetchall()
+    conn.close()
+    return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
+
+
+
+
+
 
 
 if __name__ == '__main__':

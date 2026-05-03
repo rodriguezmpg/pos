@@ -49,8 +49,8 @@ async def Grid(symbol, ps, fd, rt):
         fd.mensaje = f'Cantidad minima no aceptada minimo: {USDTmin}'
 
     if fd.control:
-        id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
-        #id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
+        #id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
+        id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
         PE_order, pnl, Fee, qty = await get_order_info(symbol, id_order_r0, max_attempts=10, wait_seconds=1) 
         fd.r0 = round(PE_order, fd.dec_precio)
         rt.comision = Fee

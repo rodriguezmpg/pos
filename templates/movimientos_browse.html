@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimientos</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root { --bg:#f5f7fb; --card:#ffffff; --text:#1f2937; --muted:#6b7280; --border:#d1d5db; --green:#16a34a; --red:#dc2626; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:16px; }
+        .container { max-width:1400px; margin:0 auto; }
+        .page-title { font-size:28px; font-weight:bold; margin-bottom:16px; text-align:center; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05); overflow-x:auto; }
+        .card-title { font-size:16px; font-weight:bold; color:var(--muted); margin-bottom:12px; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th, td { border:1px solid var(--border); padding:6px 8px; text-align:right; white-space:nowrap; }
+        th, td:first-child { text-align:left; }
+        thead th { background:#f3f4f6; font-weight:bold; }
+        tbody tr:hover { background:#eef2ff; }
+        .positive { color:var(--green); }
+        .negative { color:var(--red); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-title">Movimientos</div>
+    <div class="card">
+        <div class="card-title">Tabla completa</div>
+        <table>
+            <thead><tr>
+                <th>PK</th><th>Symbol</th><th>ID Order</th><th>ID Pos</th><th>Type</th><th>Pos</th>
+                <th>PE</th><th>SL</th><th>R1</th><th>R2</th><th>Qty</th>
+                <th>V1R</th><th>PnL</th><th>Balance</th><th>Comision</th><th>Time</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $.getJSON('/movimientos_browse_data', function(filas) {
+        const tbody = document.getElementById('tbody');
+        filas.forEach(function(r) {
+            const pnl = parseFloat(r[12]);
+            const cls = pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : '';
+            tbody.innerHTML += `<tr>
+                <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td>
+                <td>${r[6]}</td><td>${r[7]}</td><td>${r[8]}</td><td>${r[9]}</td><td>${r[10]}</td>
+                <td>${r[11]}</td><td class="${cls}">${r[12]}</td><td>${r[13]}</td><td>${r[14]}</td><td>${r[15]}</td>
+            </tr>`;
+        });
+    });
+</script>
+</body>
+</html>
