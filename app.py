@@ -108,6 +108,40 @@ def datos_analisis():
         'gl_balance_vivo': round(gl.balance_vivo,2),
     })
 
+@app.route('/test_write_movimiento', methods=['POST'])
+def test_write_movimiento():
+    """
+    Inserta una fila de prueba fija en la tabla 'movimientos' sin pedir parámetros.
+    Útil para verificar que la DB está escribiendo correctamente.
+    """
+    from core.dbfunc import write_db
+
+    timestamp = _time.strftime('%Y-%m-%d %H:%M:%S', _time.gmtime())
+
+    # Fila con 14 columnas esperadas por write_db:
+    Data_csv = [[
+        "TEST_ORDER",   # id_order
+        1,              # id_pos
+        "TEST",         # type
+        "R0",           # pos
+        "",             # pe -> NULL
+        "",             # sl -> NULL
+        "",             # r1 -> NULL
+        "",             # r2 -> NULL
+        "",             # qty -> NULL
+        "",             # v1r -> NULL
+        0.0,            # pnl
+        0.0,            # balance
+        0.0,            # comision
+        timestamp       # time
+    ]]
+
+    try:
+        write_db(Data_csv, "testsym")
+        return jsonify({'ok': True, 'symbol': 'testsym', 'time': timestamp}), 201
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
    
 
 
