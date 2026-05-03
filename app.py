@@ -197,6 +197,12 @@ def download_db():
         abort(403)
     return send_file(DB_PATH, as_attachment=True, download_name="data.db")
 
+@app.route("/upload-db", methods=["POST"])
+def upload_db():
+    file = request.files["file"]
+    file.save("/var/data/data.db")
+    return {"ok": True}
+
 
 
 @app.route('/movimientos') #Consulta para main_loop.html
@@ -315,18 +321,11 @@ def analisis_browse_data():
     conn.close()
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
-##### DESCARGAR Y SAUBIR BD
-from fastapi.responses import FileResponse
 
-@app.route("/download-db")
-def download_db():
-    return send_file("/var/data/data.db", as_attachment=True, download_name="data.db")
 
-@app.route("/upload-db", methods=["POST"])
-def upload_db():
-    file = request.files["file"]
-    file.save("/var/data/data.db")
-    return {"ok": True}
+
+
+
 
 
 if __name__ == '__main__':
