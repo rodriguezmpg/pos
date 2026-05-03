@@ -315,9 +315,18 @@ def analisis_browse_data():
     conn.close()
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
+##### DESCARGAR Y SAUBIR BD
+from fastapi.responses import FileResponse
 
+@app.get("/download-db")
+def download_db():
+    return FileResponse("/var/data/data.db", filename="data.db")
 
-
+@app.post("/upload-db")
+async def upload_db(file: UploadFile = File(...)):
+    with open("/var/data/data.db", "wb") as f:
+        f.write(await file.read())
+    return {"ok": True}
 
 
 
