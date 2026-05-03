@@ -93,8 +93,50 @@ class RealTime:
 class Global:
     def reset(self):
         self.__init__()
+
     def __init__(self):
         self.capital = 5000
+
+        
+        self.usdt1r       = 0.0
+        self.pnl_vivo     = 0.0
+        self.balance      = 0.0
+        self.sokets_activos      = 0   
+        self.capital_arriesgado = 0
+        self.disponible_operar = 0.00 
+        self.balance_vivo = 0.00             
+
+    def recalcular(self, symbol_list, main_loop):
+        self.usdt1r        = 0.0
+        self.pnl_vivo      = 0.0
+        self.balance       = 0.0
+        self.sokets_activos       = 0
+        self.capital_arriesgado = 0
+        self.disponible_operar = 0.00
+        self.balance_vivo = 0.00 
+
+        for symbol in symbol_list:
+            ps = getattr(main_loop, f"{symbol}ps")
+            rt = getattr(main_loop, f"{symbol}rt")
+            fd = getattr(main_loop, f"{symbol}fd")  
+            
+            if not ps.estado_soket:
+                continue
+          
+            
+            if rt.BE_pos == -1:
+                self.usdt1r  += ps.USDT1r  
+                             
+            self.pnl_vivo += rt.pnl_vivo
+            self.balance += rt.balance
+            
+            self.sokets_activos += 1
+
+        self.capital_arriesgado = (self.usdt1r / self.capital) *100
+        self.disponible_operar = (self.capital * 0.025) - self.capital_arriesgado
+        self.balance_vivo = self.pnl_vivo + self.balance
+
+
 
 gl = Global() 
 

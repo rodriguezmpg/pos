@@ -135,7 +135,7 @@ def iniciar_socket_async(symbol):
 
 async def detener_socket(symbol, ps, fd, rt):
     task = active_tasks.get(symbol)
-    await r_1(symbol, ps, fd, rt)
+    if fd.control: await r_1(symbol, ps, fd, rt)
     if task:        
         task.cancel()
         del active_tasks[symbol]

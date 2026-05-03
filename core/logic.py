@@ -27,7 +27,7 @@ async def Grid(symbol, ps, fd, rt):
         fd.r1 = round(fd.r0 * (1 + (fd.perc1r / 100)), fd.dec_precio)
         fd.r2 = round(fd.r0 * (1 + (fd.perc2r / 100)), fd.dec_precio)
         fd.dist_1r = fd.r0 - fd.r_1
-        rt.r_ts = fd.r2 + fd.dist_1r
+        rt.r_ts = round(fd.r2 + fd.dist_1r, fd.dec_precio)   
         side_open = 'BUY'
         fd.side_close = 'SELL'
     else:
@@ -36,7 +36,7 @@ async def Grid(symbol, ps, fd, rt):
         fd.r1  = round(fd.r0 * (1 - (fd.perc1r / 100)), fd.dec_precio)     
         fd.r2  = round(fd.r0 * (1 - (fd.perc2r / 100)), fd.dec_precio)
         fd.dist_1r = fd.r_1 - fd.r0
-        rt.r_ts = fd.r2 - fd.dist_1r
+        rt.r_ts = round(fd.r2 - fd.dist_1r, fd.dec_precio)
         side_open = 'SELL'
         fd.side_close = 'BUY'
 
@@ -162,12 +162,12 @@ async def r1_r2(symbol, ps, fd, rt):
 async def r_ts(symbol, ps, fd, rt):
     print("R_TS")
     if fd.type_pos == 'LONG':
-        rt.r_1 = rt.r_ts - fd.dist_1r
-        rt.r_ts += fd.dist_1r
+        rt.r_1 = round(rt.r_ts - fd.dist_1r, fd.dec_precio)
+        rt.r_ts += round(fd.dist_1r, fd.dec_precio)
 
     elif fd.type_pos == 'SHORT':
-        rt.r_1 = rt.r_ts + fd.dist_1r
-        rt.r_ts -= fd.dist_1r
+        rt.r_1 = round(rt.r_ts + fd.dist_1r, fd.dec_precio)
+        rt.r_ts -= round(fd.dist_1r, fd.dec_precio)
 
     rt.BE_pos += 1
     rt.ALGO_pos = 'TS'

@@ -95,12 +95,20 @@ def datos():
 
 @app.route('/datos_analisis')
 def datos_analisis(): 
-   
+    gl.recalcular(symbol_list, main_loop)
+
     return jsonify({
         'gl_capital': gl.capital,
-        
-        
+        'gl_usdt1r': gl.usdt1r,
+        'gl_pnl_vivo': round(gl.pnl_vivo,2),
+        'gl_balance': round(gl.balance,2),
+        'gl_sokets_activos': gl.sokets_activos,
+        'gl_capital_arriesgado':round(gl.capital_arriesgado,2),
+        'gl_disponible_operar':round(gl.disponible_operar,2),
+        'gl_balance_vivo': round(gl.balance_vivo,2),
     })
+
+   
 
 
 @app.route('/datos_PControl') #Datos para el panel de control de index

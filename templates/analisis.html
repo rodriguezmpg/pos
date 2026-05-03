@@ -305,28 +305,32 @@
               <td><span id="gl_capital"></span></td>
             </tr>
             <tr>
+              <td>Activos</td>
+              <td><span id="gl_sokets_activos"></span></td>
+            </tr>
+            <tr>
               <td>Pérdidas estimadas</td>
-              <td><span id="fin_perdidas_estimadas"></span></td>
+              <td><span id="gl_usdt1r"></span></td>
             </tr>
             <tr>
               <td>Capital arriesgado</td>
-              <td><span id="fin_capital_arriesgado"></span></td>
+              <td><span id="gl_capital_arriesgado"></span></td>
             </tr>
             <tr>
               <td>Disponible para operar</td>
-              <td><span id="fin_disponible"></span></td>
+              <td><span id="gl_disponible_operar"></span></td>
             </tr>
             <tr>
               <td>Balance actual</td>
-              <td><span id="fin_balance_actual"></span></td>
+              <td><span id="gl_balance"></span></td>
             </tr>
             <tr>
               <td>Pnl actual</td>
-              <td><span id="fin_pnl_actual"></span></td>
+              <td><span id="gl_pnl_vivo"></span></td>
             </tr>
             <tr>
               <td>Balance vivo actual</td>
-              <td><span id="fin_balance_vivo"></span></td>
+              <td><span id="gl_balance_vivo"></span></td>
             </tr>
           </tbody>
         </table>
@@ -769,14 +773,24 @@
 
 
 
-  function actualizarDatos() {
-        $.getJSON(`/datos_analisis`, function(data) {
-            $('.gl_capital').text(data.gl_capital);
-          
-        })
-    }           
-  setInterval(actualizarDatos, 5000); 
-  actualizarDatos();
+function actualizarDatos() {
+  fetch('/datos_analisis')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('gl_capital').textContent = data.gl_capital;
+      document.getElementById('gl_usdt1r').textContent = data.gl_usdt1r;
+      document.getElementById('gl_pnl_vivo').textContent = data.gl_pnl_vivo;
+      document.getElementById('gl_balance').textContent = data.gl_balance;
+      document.getElementById('gl_sokets_activos').textContent = data.gl_sokets_activos;
+      document.getElementById('gl_capital_arriesgado').textContent = data.gl_capital_arriesgado;
+      document.getElementById('gl_disponible_operar').textContent = data.gl_disponible_operar;
+      document.getElementById('gl_balance_vivo').textContent = data.gl_balance_vivo;
+    })
+    .catch(err => console.error('Error /datos_analisis:', err));
+}
+setInterval(actualizarDatos, 5000);
+actualizarDatos();
+
 </script>
 
 </body>
