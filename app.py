@@ -108,7 +108,7 @@ def datos_analisis():
         'gl_balance_vivo': round(gl.balance_vivo,2),
     })
 
-@app.route('/test_write_movimiento', methods=['POST'])
+@app.route('/test_write_movimiento', methods=['GET', 'POST'])
 def test_write_movimiento():
     """
     Inserta una fila de prueba fija en la tabla 'movimientos' sin pedir parámetros.
