@@ -52,11 +52,11 @@ async def Grid(symbol, ps, fd, rt):
         #id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
         id_order_r0 = await order_market(symbol, side_open, fd.Qty_mVar, False)
         PE_order, pnl, Fee, qty = await get_order_info(symbol, id_order_r0, max_attempts=10, wait_seconds=1) 
-        fd.r0 = round(PE_order, fd.dec_precio)
+         
         rt.comision = Fee
 
         if fd.r0 < ps.p2r: #long
-            splittage = PE_order - fd.r0
+            splittage = PE_order - fd.r0  #tienen el mismo valor por que le doy el valor mas arriba
             fd.r_1 = round(fd.r_1 + splittage, fd.dec_precio)
             fd.r1 = round(fd.r1 + splittage, fd.dec_precio)
             fd.r2 = round(fd.r2 + splittage, fd.dec_precio)
@@ -66,9 +66,11 @@ async def Grid(symbol, ps, fd, rt):
             fd.r1  = round(fd.r1 - splittage, fd.dec_precio) 
             fd.r2  = round(fd.r2 - splittage, fd.dec_precio)
 
+        fd.r0 = round(PE_order, fd.dec_precio)
+
         fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
         fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
-        fd.Qty_ts = round((fd.Qty_mVar - rt.Qty_r1 - rt.Qty_r2), fd.dec_qty)
+        fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
 
         rt.Qty_r1 = fd.Qty_r1
         rt.Qty_r2 = fd.Qty_r2
@@ -100,7 +102,7 @@ async def Grid(symbol, ps, fd, rt):
         ]
         write_db(Data_db, symbol)
         
-        rt.balance -= rt.comision
+        
 
 
         # if fd.type_pos == 'SHORT': #TEST RAPIDO
