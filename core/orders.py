@@ -232,6 +232,14 @@ def get_listen_key(): #para escucha de cambios en ordenes condicionales
     resp = requests.post(url, headers=headers, timeout=10)
     return resp.json()["listenKey"]
 
+def keepalive_listen_key(listen_key: str):
+    """Renueva el listenKey para que no expire. Llamar cada 30-50 min."""
+    url = f"{FUTURES_BASE}/fapi/v1/listenKey"
+    headers = {"X-MBX-APIKEY": API_KEY}
+    params = {"listenKey": listen_key}
+    resp = requests.put(url, headers=headers, params=params, timeout=10)
+    if resp.status_code != 200:
+        raise Exception(f"Keepalive listenKey falló {resp.status_code}: {resp.text}")
 
 
 

@@ -5,7 +5,7 @@ import json
 import traceback
 import os
 
-from core.orders import get_listen_key
+from core.orders import get_listen_key, keepalive_listen_key
 from core.classes import DataPost, FixedData, RealTime, OrderError, Global
 from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
@@ -168,55 +168,57 @@ async def start_user_data_socket_order_update():
             eventos = "ORDER_TRADE_UPDATE/ALGO_UPDATE/ACCOUNT_CONFIG_UPDATE"
             if TESTNET: url = f"wss://stream.binancefuture.com/ws/{listen_key}"
             else: url = f"wss://fstream.binance.com/private/ws?listenKey={listen_key}&events={eventos}"
+
+            last_keepalive = asyncio.get_event_loop().time()
             
             async with websockets.connect(url) as ws:
                 print("[GENERAL SOCKET] Conectado")
                 
                 while True:
-                    msg = await ws.recv()
-                    data = json.loads(msg)
-                    evento = data.get("e")
+                    try: 
+                        msg = await asyncio.wait_for(ws.recv(), timeout=30)
+                        data = json.loads(msg)
+                        evento = data.get("e")
 
-                    if evento == "ORDER_TRADE_UPDATE":
-                        o = data.get("o", {})
-                        algo_id_vinculado = o.get("si") or o.get("ca") # ca es Client Algo ID
-                        order_id_real = o.get("i")
-                        symbol_raw = o.get("s")
-                        
-                        if o.get("X") == "FILLED":
-                            pnl = float(o.get("rp", 0))
-                            if pnl != 0:
-                                if symbol_raw:
-                                    try: 
-                                        ps, fd, rt = get_vars(symbol_raw.lower())
+                        if evento == "ORDER_TRADE_UPDATE":
+                            o = data.get("o", {})
+                            algo_id_vinculado = o.get("si") or o.get("ca") # ca es Client Algo ID
+                            order_id_real = o.get("i")
+                            symbol_raw = o.get("s")
+                            
+                            if o.get("X") == "FILLED":
+                                pnl = float(o.get("rp", 0))
+                                if pnl != 0:
+                                    if symbol_raw:
+                                        try: 
+                                            ps, fd, rt = get_vars(symbol_raw.lower())
 
-                                        if algo_id_vinculado == rt.id_order_r1: rt.r1_active = True
-                                        if algo_id_vinculado == rt.id_order_r2: rt.r2_active = True
-                                        if algo_id_vinculado == rt.id_order_r_1: rt.r_1_active = True
-                                        
+                                            if algo_id_vinculado == rt.id_order_r1: rt.r1_active = True
+                                            if algo_id_vinculado == rt.id_order_r2: rt.r2_active = True
+                                            if algo_id_vinculado == rt.id_order_r_1: rt.r_1_active = True
+                                            
 
-                                        rt.ALGO_orderid = order_id_real
-                                        rt.ALGO_pnl = float(pnl)
-                                        rt.AlGO_comision = float(o.get('n')) #N
-                                        rt.ALGO_QtymVar = float(o.get("z")) # o probar "l"
-                                        rt.ALGO_PE = float(o.get("ap"))
-                                                                             
-                                    except Exception as var_error:
-                                        print(f"[ERROR VARS] No se pudo asignar posicionalgo para {symbol_raw}: {var_error}")
+                                            rt.ALGO_orderid = order_id_real
+                                            rt.ALGO_pnl = float(pnl)
+                                            rt.AlGO_comision = float(o.get('n')) #N
+                                            rt.ALGO_QtymVar = float(o.get("z")) # o probar "l"
+                                            rt.ALGO_PE = float(o.get("ap"))
+                                                                                
+                                        except Exception as var_error:
+                                            print(f"[ERROR VARS] No se pudo asignar posicionalgo para {symbol_raw}: {var_error}")
 
-                                # print(f"DETALLES DE CIERRE")
-                                # print(f"Símbolo: {o.get('s')}")
-                                # print(f"Order ID: {order_id_real}")
-                                # print(f"Algo ID Vinculado: {algo_id_vinculado}")
-                                # print(f"PNL Realizado: {pnl}")
-                                # print(f"Comisión: {o.get('n')} {o.get('N')}")
-                                # print(f"rt.id_order_r1: {rt.id_order_r1}")
-                                # print(f"rt.id_order_r2: {rt.id_order_r2}")
-                                # print(f"rt.id_order_r_1: {rt.id_order_r_1}")
-                                # print(f"rt.r1_active: {rt.r1_active}")
-                                # print(f"rt.r2_active: {rt.r2_active}")
-                                # print(f"rt.r_1_active: {rt.r_1_active}")
-                                
+                    except asyncio.TimeoutError:
+                        # Keepalive cada 30 minutos para que el listenKey no expire
+                        ahora = asyncio.get_event_loop().time()
+                        if ahora - last_keepalive > 1800:
+                            try:
+                                await asyncio.to_thread(keepalive_listen_key, listen_key)
+                                last_keepalive = ahora
+                                print(f"[GENERAL SOCKET] Keepalive enviado - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+                            except Exception as ka_error:
+                                print(f"[GENERAL SOCKET] Keepalive falló, reconectando: {ka_error}")
+                                break  # Fuerza reconexión con nuevo listenKey
+                        # Si no es hora de keepalive, simplemente sigue esperando
 
         except Exception as e:
             print(f"[USER SOCKET ERROR] Reintentando... {e}")

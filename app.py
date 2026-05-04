@@ -322,7 +322,19 @@ def analisis_browse_data():
     return jsonify([[("" if v is None else v) for v in fila] for fila in filas])
 
 
-
+@app.route('/deletedb')
+def deletedb():
+    token = request.args.get("token")
+    expected = os.getenv("ADMIN_TOKEN")
+    if not expected or token != expected:
+        abort(403)
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM movimientos")
+    cur.execute("DELETE FROM analisis")
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
 
 
 
