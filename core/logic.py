@@ -68,11 +68,15 @@ async def Grid(symbol, ps, fd, rt):
 
         fd.Qty_r1 = round((fd.Qty_mVar / 2), fd.dec_qty)
         fd.Qty_r2 = round((fd.Qty_mVar / 4), fd.dec_qty)
-        fd.Qty_ts = round((fd.Qty_mVar - fd.Qty_r1 - fd.Qty_r2), fd.dec_qty)
+        fd.Qty_ts = round((fd.Qty_mVar - rt.Qty_r1 - rt.Qty_r2), fd.dec_qty)
+
+        rt.Qty_r1 = fd.Qty_r1
+        rt.Qty_r2 = fd.Qty_r2
+        rt.Qty_ts = fd.Qty_ts
 
         fd.pnl1_r = round(((fd.r_1 - fd.r0 )* fd.Qty_mVar),4)
-        fd.pnl1r = round(((fd.r1 - fd.r0 )* fd.Qty_r1),4)
-        fd.pnl2r = round(((fd.r2 - fd.r0 )* fd.Qty_r2),4)
+        fd.pnl1r = round(((fd.r1 - fd.r0 )* rt.Qty_r1),4)
+        fd.pnl2r = round(((fd.r2 - fd.r0 )* rt.Qty_r2),4)
 
         rt.balance -= rt.comision
         rt.secuencia += 'R0' + " | "
@@ -111,8 +115,8 @@ async def Grid(symbol, ps, fd, rt):
         # rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, 0.05, fd.r2)
         # rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
 
-        rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, fd.Qty_r1, fd.r1)
-        rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, fd.Qty_r2, fd.r2)
+        rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, rt.Qty_r1, fd.r1)
+        rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, rt.Qty_r2, fd.r2)
         rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
 
 
@@ -124,7 +128,7 @@ async def r1_r2(symbol, ps, fd, rt):
         rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, rt.r_1)
         rt.BE_pos +=1 #vale 0
         rt.r1_active = False
-        fd.Qty_r1 = 0
+        rt.Qty_r1 = 0
     elif rt.r2_active:       
         rt.ALGO_pos = 'R2'
         cancel_algo_order(symbol, rt.id_order_r_1)  
@@ -132,7 +136,7 @@ async def r1_r2(symbol, ps, fd, rt):
         rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, rt.r_1)
         rt.BE_pos += 1 #vale 1
         rt.r2_active = False
-        fd.Qty_r2 = 0
+        rt.Qty_r2 = 0
          
 
     rt.secuencia += rt.ALGO_pos + " | "
@@ -245,9 +249,9 @@ async def metrics(symbol, ps, fd, rt):
 
     #pnl vivo
     if fd.type_pos == 'LONG':
-        rt.pnl_vivo = round((rt.current_price - fd.r0) * (fd.Qty_r1 + fd.Qty_r2 + fd.Qty_ts), 2)
+        rt.pnl_vivo = round((rt.current_price - fd.r0) * (rt.Qty_r1 + rt.Qty_r2 + rt.Qty_ts), 2)
     elif fd.type_pos == 'SHORT':
-        rt.pnl_vivo = round((fd.r0 - rt.current_price) * (fd.Qty_r1 + fd.Qty_r2 + fd.Qty_ts), 2)
+        rt.pnl_vivo = round((fd.r0 - rt.current_price) * (rt.Qty_r1 + rt.Qty_r2 + rt.Qty_ts), 2)
 
     rt.balance_vivo = rt.balance + rt.pnl_vivo
 

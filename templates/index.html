@@ -228,19 +228,26 @@ document.getElementById('tbody-simbolos').innerHTML = generarFilasTabla(simbolos
 
            
             
-   function actualizarPControl() {
+function actualizarPControl() {
     fetch('/datos_PControl')
         .then(response => response.json())
         .then(data => {
             for (const [ticker, campos] of Object.entries(data)) {
+
+                // 👇 obtenemos el estado de la fila
+                const estado = campos.ps_estado_soket;
+
                 for (const [campo, valor] of Object.entries(campos)) {
                     const span = document.getElementById(`${ticker}_${campo}`);
                     if (span) {
+
                         if (valor === 0 || valor === "0") {
-                            span.textContent = "";
+                            // 👇 SOLO mostrar 0 si estado es true
+                            span.textContent = estado ? "0" : "";
                         } else {
                             span.textContent = valor;
                         }
+
                     }
                 }
             }

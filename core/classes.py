@@ -71,6 +71,10 @@ class RealTime:
         self.r_1_active = False
         self.r_ts = 0.00
 
+        self.Qty_r1 = 0.00
+        self.Qty_r2 = 0.00
+        self.Qty_ts = 0.00
+
         self.ALGO_orderid = 0
         self.ALGO_pnl = 0.00
         self.AlGO_comision = 0.00
@@ -132,8 +136,8 @@ class Global:
             
             self.sokets_activos += 1
 
-        self.capital_arriesgado = (self.usdt1r / self.capital) *100
-        self.disponible_operar = (self.capital * 0.025) - self.capital_arriesgado
+        self.capital_arriesgado = (self.usdt1r / self.capital) * 100
+        self.disponible_operar = (self.capital * 0.025) - self.usdt1r + self.balance
         self.balance_vivo = self.pnl_vivo + self.balance
 
 
