@@ -6,7 +6,7 @@ import traceback
 import os
 
 from core.orders import get_listen_key, keepalive_listen_key
-from core.classes import DataPost, FixedData, RealTime, OrderError, Global
+from core.classes import DataPost, FixedData, RealTime, OrderError, gl
 from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
 
@@ -139,7 +139,7 @@ def iniciar_socket_async(symbol):
 
 async def detener_socket(symbol, ps, fd, rt):
     task = active_tasks.get(symbol)
-    if fd.control: await r_1(symbol, ps, fd, rt)
+    if fd.control and rt.detener_cm: await r_1(symbol, ps, fd, rt)
     if task:        
         task.cancel()
         del active_tasks[symbol]

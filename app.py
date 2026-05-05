@@ -98,12 +98,12 @@ def datos_analisis():
     gl.recalcular(symbol_list, main_loop)
 
     return jsonify({
-        'gl_capital': gl.capital,
+        'gl_capital_base': gl.capital_base,
         'gl_usdt1r': gl.usdt1r,
         'gl_pnl_vivo': round(gl.pnl_vivo,2),
         'gl_balance': round(gl.balance,2),
         'gl_sokets_activos': gl.sokets_activos,
-        'gl_capital_arriesgado':round(gl.capital_arriesgado,2),
+        'gl_capital_base_arriesgado':round(gl.capital_base_arriesgado,2),
         'gl_disponible_operar':round(gl.disponible_operar,2),
         'gl_balance_vivo': round(gl.balance_vivo,2),
     })
@@ -143,7 +143,7 @@ async def detener_socket():
     rt = getattr(main_loop, f"{ticker}rt")
     fd = getattr(main_loop, f"{ticker}fd")  
     rt.detener_cm = True
-    await main_loop.detener_socket(ticker, ps, fd, rt)
+    await main_loop.detener_socket(ticker, ps, fd, rt, gl)
     main_loop.var_restart([ticker]) 
     ps = getattr(main_loop, f"{ticker}ps")
     ps.reset()

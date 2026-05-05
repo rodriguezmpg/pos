@@ -56,7 +56,8 @@ class RealTime:
         self.fechayhora = None
         self.secuencia = ''
 
-        self.detener_cm = False #Detener soket
+        self.detener_cm = False #Detener soket manual
+        self.detener_ca = False #Detener soket automatico
 
         self.balance = 0.00
 
@@ -94,12 +95,14 @@ class RealTime:
         self.capital = 5000
 
 
-class Global:
+class Globales:
     def reset(self):
         self.__init__()
 
     def __init__(self):
-        self.capital = 5000
+        self.capital_base = 5000
+
+        self.capital_actual = 0.00
 
         
         self.usdt1r       = 0.0
@@ -136,13 +139,15 @@ class Global:
             
             self.sokets_activos += 1
 
-        self.capital_arriesgado = (self.usdt1r / self.capital) * 100
-        self.disponible_operar = (self.capital * 0.025) - self.usdt1r + self.balance
+        self.capital_actual += self.capital_base 
+        self.capital_arriesgado = (self.usdt1r / self.capital_actual) * 100
+        self.disponible_operar = (self.capital_actual * 0.025) - self.usdt1r + self.balance
         self.balance_vivo = self.pnl_vivo + self.balance
+        
 
 
 
-gl = Global() 
+gl = Globales() 
 
 class OrderError(Exception): #Para que detenga el socket si hay error en la orden.
     pass

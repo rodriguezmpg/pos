@@ -302,7 +302,7 @@
           <tbody>
             <tr>
               <td>Capital Base</td>
-              <td><span id="gl_capital"></span></td>
+              <td><span id="gl_capital_base"></span></td>
             </tr>
             <tr>
               <td>Activos</td>
@@ -314,7 +314,7 @@
             </tr>
             <tr>
               <td>Capital arriesgado</td>
-              <td><span id="gl_capital_arriesgado"></span></td>
+              <td><span id="gl_capital_base_arriesgado"></span></td>
             </tr>
             <tr>
               <td>Disponible para operar</td>
@@ -777,12 +777,12 @@ function actualizarDatos() {
   fetch('/datos_analisis')
     .then(res => res.json())
     .then(data => {
-      document.getElementById('gl_capital').textContent = data.gl_capital;
+      document.getElementById('gl_capital_base').textContent = data.gl_capital_base;
       document.getElementById('gl_usdt1r').textContent = data.gl_usdt1r;
       document.getElementById('gl_pnl_vivo').textContent = data.gl_pnl_vivo;
       document.getElementById('gl_balance').textContent = data.gl_balance;
       document.getElementById('gl_sokets_activos').textContent = data.gl_sokets_activos;
-      document.getElementById('gl_capital_arriesgado').textContent = data.gl_capital_arriesgado + '%';
+      document.getElementById('gl_capital_base_arriesgado').textContent = data.gl_capital_base_arriesgado + '%';
       document.getElementById('gl_disponible_operar').textContent = data.gl_disponible_operar;
       document.getElementById('gl_balance_vivo').textContent = data.gl_balance_vivo;
     })

@@ -2,7 +2,7 @@ import sqlite3
 
 from core.dbfunc import write_db, write_analisis_db, DB_PATH
 from core.orders import close_total, order_market, get_order_info, order_tp_market, order_sl_stop_market, cancel_algo_order
-
+from core.classes import gl
 
 async def Grid(symbol, ps, fd, rt):
     conn = sqlite3.connect(DB_PATH)
@@ -184,7 +184,7 @@ async def r_ts(symbol, ps, fd, rt):
 async def r_1(symbol, ps, fd, rt):
 
     if rt.detener_cm: #detener soket
-        id_order = cancel_algo_order(symbol, rt.id_order_r_1)       
+        id_order = cancel_algo_order(symbol, rt.id_order_r_1)     
         id_order_cm = await close_total(symbol)
         PE_order, pnl, Fee, qty = await get_order_info(symbol, id_order_cm, max_attempts=10, wait_seconds=1)
         rt.ALGO_orderid = id_order_cm
@@ -205,7 +205,7 @@ async def r_1(symbol, ps, fd, rt):
     Data_db= [
             [
             rt.ALGO_orderid,
-            rt.id_order_r_1,
+            fd.id_pos,
             fd.type_pos,
             ALGO_pos,
             round(rt.ALGO_PE, fd.dec_precio),
@@ -224,7 +224,7 @@ async def r_1(symbol, ps, fd, rt):
 
     write_analisis_db(
         symbol      = symbol,
-        id_pos      = rt.id_order_r_1,
+        id_pos      = fd.id_pos,
         type_pos    = fd.type_pos,
         pos         = ALGO_pos,
         time_open   = fd.fechainicio,
@@ -236,8 +236,16 @@ async def r_1(symbol, ps, fd, rt):
         secuencia   = rt.secuencia,
     )
 
+    gl.capital_actual += rt.balance
+
     cancel_algo_order(symbol, rt.id_order_r1)
     cancel_algo_order(symbol, rt.id_order_r2)
+
+    if not rt.detener_ca:
+        await main_loop.detener_socket(symbol, ps, fd, rt)
+        main_loop.var_restart([symbol])  
+        ps = getattr(main_loop, f"{symbol}ps")
+        ps.reset()
 
     rt.r_1_active = False
 
@@ -263,6 +271,7 @@ async def Steps(ps, fd, rt, symbol):
         if rt.r1_active or rt.r2_active:
             await r1_r2(symbol, ps, fd, rt)
         if rt.r_1_active:
+            rt.detener_ca = True
             await r_1(symbol, ps, fd, rt)
 
         if fd.type_pos == 'LONG':
