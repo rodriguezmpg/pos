@@ -59,7 +59,7 @@
       grid-template-columns: 1fr 1fr 1fr;
       gap: 16px;
       margin-bottom: 16px;
-      align-items: start;
+      align-items: stretch;
     }
 
     table.tablafija {
@@ -301,8 +301,8 @@
         <table class="tablafija">
           <tbody>
             <tr>
-              <td>Capital Base</td>
-              <td><span id="gl_capital_base"></span></td>
+              <td>Capital</td>
+              <td><span id="gl_capital"></span></td>
             </tr>
             <tr>
               <td>Activos</td>
@@ -314,7 +314,7 @@
             </tr>
             <tr>
               <td>Capital arriesgado</td>
-              <td><span id="gl_capital_base_arriesgado"></span></td>
+              <td><span id="gl_capital_arriesgado"></span></td>
             </tr>
             <tr>
               <td>Disponible para operar</td>
@@ -329,7 +329,7 @@
               <td><span id="gl_pnl_vivo"></span></td>
             </tr>
             <tr>
-              <td>Balance vivo actual</td>
+              <td>Balance vivo</td>
               <td><span id="gl_balance_vivo"></span></td>
             </tr>
           </tbody>
@@ -354,6 +354,48 @@
           </div>
         </div>
       </div>
+
+
+      <!-- LONG -->
+      <div class="card">
+        <div class="card-title">Long</div>
+        <table class="tablafija">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="td-label">Activos</td><td><span id="gl_sokets_activos_long"></span></td></tr>
+            <tr><td class="td-label">% Exposición</td><td><span id="exposicion_long"></span></td></tr>
+            <tr><td class="td-label">Balance Actual</td><td><span id="gl_balance_long"></span></td></tr>
+            <tr><td class="td-label">PnL Actual</td><td><span id="gl_pnl_vivo_long"></span></td></tr>
+            <tr><td class="td-label">Balance Vivo</td><td><span id="gl_balance_vivo_long"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SHORT -->
+      <div class="card">
+        <div class="card-title">Short</div>
+        <table class="tablafija">
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="td-label">Activos</td><td><span id="gl_sokets_activos_short"></span></td></tr>
+            <tr><td class="td-label">% Exposición</td><td><span id="exposicion_short"></span></td></tr>
+            <tr><td class="td-label">Balance Actual</td><td><span id="gl_balance_short"></span></td></tr>
+            <tr><td class="td-label">PnL Actual</td><td><span id="gl_pnl_vivo_short"></span></td></tr>
+            <tr><td class="td-label">Balance Vivo</td><td><span id="gl_balance_vivo_short"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
 
     </div>
 
@@ -443,7 +485,15 @@
         return res.json();
       })
       .then(rawData => {
-        if (!rawData.length) throw new Error("La tabla no contiene filas válidas.");
+        //if (!rawData.length) throw new Error("La tabla no contiene filas válidas.");
+        if (!rawData.length) {
+        message.textContent = "No hay datos para mostrar.";
+        message.className = "message";
+        results.classList.remove("hidden");
+
+        clearUI(); // deja todo en 0 limpio
+        return;
+      }
 
         const rows = rawData.map(cols => ({
           symbol:    String(cols[0]).trim(),
@@ -777,14 +827,35 @@ function actualizarDatos() {
   fetch('/datos_analisis')
     .then(res => res.json())
     .then(data => {
-      document.getElementById('gl_capital_base').textContent = data.gl_capital_base;
+      document.getElementById('gl_capital').textContent = data.gl_capital;
       document.getElementById('gl_usdt1r').textContent = data.gl_usdt1r;
       document.getElementById('gl_pnl_vivo').textContent = data.gl_pnl_vivo;
       document.getElementById('gl_balance').textContent = data.gl_balance;
       document.getElementById('gl_sokets_activos').textContent = data.gl_sokets_activos;
-      document.getElementById('gl_capital_base_arriesgado').textContent = data.gl_capital_base_arriesgado + '%';
+      document.getElementById('gl_capital_arriesgado').textContent = data.gl_capital_arriesgado + '%';
       document.getElementById('gl_disponible_operar').textContent = data.gl_disponible_operar;
       document.getElementById('gl_balance_vivo').textContent = data.gl_balance_vivo;
+      document.getElementById('gl_sokets_activos_long').textContent = data.gl_sokets_activos_long;
+      document.getElementById('gl_sokets_activos_short').textContent = data.gl_sokets_activos_short;
+      document.getElementById('gl_balance_long').textContent = data.gl_balance_long;
+      document.getElementById('gl_balance_short').textContent = data.gl_balance_short;
+      document.getElementById('gl_pnl_vivo_long').textContent = data.gl_pnl_vivo_long;
+      document.getElementById('gl_pnl_vivo_short').textContent = data.gl_pnl_vivo_short;
+      document.getElementById('gl_balance_vivo_long').textContent = data.gl_balance_vivo_long;
+      document.getElementById('gl_balance_vivo_short').textContent = data.gl_balance_vivo_short;
+      
+      
+      // Exposición long/short
+      const total = data.gl_sokets_activos_long + data.gl_sokets_activos_short;
+      if (total > 0) {
+        const expLong  = ((data.gl_sokets_activos_long  / total) * 100).toFixed(1);
+        const expShort = ((data.gl_sokets_activos_short / total) * 100).toFixed(1);
+        document.getElementById('exposicion_long').textContent  = expLong  + '%';
+        document.getElementById('exposicion_short').textContent = expShort + '%';
+      } else {
+        document.getElementById('exposicion_long').textContent  = '0%';
+        document.getElementById('exposicion_short').textContent = '0%';
+      }
     })
     .catch(err => console.error('Error /datos_analisis:', err));
 }

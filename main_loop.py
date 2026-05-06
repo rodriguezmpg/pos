@@ -10,6 +10,9 @@ from core.classes import DataPost, FixedData, RealTime, OrderError, gl
 from core.logic import Grid, Steps, r_1
 from core.utils import Qty_min, obtenerdecimales
 
+import logging
+logger = logging.getLogger('reg')
+
 
 TESTNET = os.getenv("BINANCE_TESTNET", "false").lower() == "true"
 
@@ -28,12 +31,12 @@ for ticker in symbol_list:
     globals()[f"{ticker}rt"] = RealTime()
   
 
-
 def var_restart(symbols):  
     for symbol in symbols:
         ps, fd, rt = get_vars(symbol)
         fd.reset()
         rt.reset()
+        ps.reset()
 
         fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
         print(f"Variables reseteadas para, {symbol} - {fechayhora}")
@@ -55,7 +58,7 @@ async def calculos(symbol, datasocket):
 
     if reinicio[symbol]: #reinicio las variables un sola vez
         reinicio[symbol] = False  #importante que este primero antes de los await
-        var_restart([symbol])
+        #var_restart([symbol]) #No lo necesito por que resetea al detener el soket.
         rt.current_price = float(datasocket['c'])
         fd.r0 = rt.current_price
         fd.fechainicio = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
@@ -80,6 +83,25 @@ async def calculos(symbol, datasocket):
 ################# FUNCIONES RELACIONADAS AL SOCKET #######################
 active_tasks = {}
 event_loop = None
+
+
+def iniciar_socket_async(symbol):
+    global active_tasks, event_loop
+
+    if symbol in active_tasks:
+        print(f"[SOCKET] Ya está activo: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+        return
+
+    if event_loop is None:
+        print(f"[ERROR] Event loop no está inicializado - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+        return
+
+    task = asyncio.run_coroutine_threadsafe(start_socket(symbol), event_loop)
+    active_tasks[symbol] = task
+    print(f"[SOCKET] Tarea enviada al loop para: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+    
+    
+    ps, fd, rt = get_vars(symbol)
 
 async def start_socket(symbol):
     global reinicio
@@ -116,33 +138,7 @@ async def start_socket(symbol):
         print(f"[SOCKET] Reintentando conexión para: {symbol} en 5 segundos... - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
         await asyncio.sleep(5)  # Espera 5 segundos antes de intentar reconectar.
 
-        
 
-def iniciar_socket_async(symbol):
-    global active_tasks, event_loop
-
-    if symbol in active_tasks:
-        print(f"[SOCKET] Ya está activo: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-        return
-
-    if event_loop is None:
-        print(f"[ERROR] Event loop no está inicializado - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-        return
-
-    task = asyncio.run_coroutine_threadsafe(start_socket(symbol), event_loop)
-    active_tasks[symbol] = task
-    print(f"[SOCKET] Tarea enviada al loop para: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-    
-    
-    ps, fd, rt = get_vars(symbol)
-  
-
-async def detener_socket(symbol, ps, fd, rt):
-    task = active_tasks.get(symbol)
-    if fd.control and rt.detener_cm: await r_1(symbol, ps, fd, rt)
-    if task:        
-        task.cancel()
-        del active_tasks[symbol]
 
 
 
@@ -154,10 +150,6 @@ def iniciar_asyncio_orderupdate():
     loop.create_task(start_user_data_socket_order_update())
 
     loop.run_forever()
-
-
-
-
 
 async def start_user_data_socket_order_update():
 
@@ -173,7 +165,6 @@ async def start_user_data_socket_order_update():
             
             async with websockets.connect(url) as ws:
                 print("[GENERAL SOCKET] Conectado")
-                
                 while True:
                     try: 
                         msg = await asyncio.wait_for(ws.recv(), timeout=30)
@@ -225,3 +216,10 @@ async def start_user_data_socket_order_update():
             await asyncio.sleep(10)
 
 
+    
+async def detener_socket(symbol, ps, fd, rt):
+    task = active_tasks.get(symbol)
+    if fd.control and rt.detener_cm: await r_1(symbol, ps, fd, rt)
+    if task:        
+        task.cancel()
+        del active_tasks[symbol]

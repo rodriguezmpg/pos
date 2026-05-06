@@ -236,16 +236,15 @@ async def r_1(symbol, ps, fd, rt):
         secuencia   = rt.secuencia,
     )
 
-    gl.capital_actual += rt.balance
+
 
     cancel_algo_order(symbol, rt.id_order_r1)
     cancel_algo_order(symbol, rt.id_order_r2)
 
-    if not rt.detener_ca:
-        await main_loop.detener_socket(symbol, ps, fd, rt)
-        main_loop.var_restart([symbol])  
-        ps = getattr(main_loop, f"{symbol}ps")
-        ps.reset()
+    if not rt.detener_cm:
+        from main_loop import detener_socket, var_restart
+        await detener_socket(symbol, ps, fd, rt)
+        var_restart([symbol])
 
     rt.r_1_active = False
 
@@ -271,7 +270,6 @@ async def Steps(ps, fd, rt, symbol):
         if rt.r1_active or rt.r2_active:
             await r1_r2(symbol, ps, fd, rt)
         if rt.r_1_active:
-            rt.detener_ca = True
             await r_1(symbol, ps, fd, rt)
 
         if fd.type_pos == 'LONG':

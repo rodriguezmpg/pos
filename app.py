@@ -98,17 +98,23 @@ def datos_analisis():
     gl.recalcular(symbol_list, main_loop)
 
     return jsonify({
-        'gl_capital_base': gl.capital_base,
+        'gl_capital': gl.capital,
         'gl_usdt1r': gl.usdt1r,
         'gl_pnl_vivo': round(gl.pnl_vivo,2),
         'gl_balance': round(gl.balance,2),
         'gl_sokets_activos': gl.sokets_activos,
-        'gl_capital_base_arriesgado':round(gl.capital_base_arriesgado,2),
+        'gl_capital_arriesgado':round(gl.capital_arriesgado,2),
         'gl_disponible_operar':round(gl.disponible_operar,2),
         'gl_balance_vivo': round(gl.balance_vivo,2),
+        'gl_sokets_activos_long': round(gl.sokets_activos_long,2),
+        'gl_sokets_activos_short': round(gl.sokets_activos_short,2),
+        'gl_balance_long': round(gl.balance_long,2),
+        'gl_balance_short': round(gl.balance_short,2),
+        'gl_pnl_vivo_long': round(gl.pnl_vivo_long,2),
+        'gl_pnl_vivo_short': round(gl.pnl_vivo_short,2),
+        'gl_balance_vivo_long': round(gl.balance_vivo_long,2),
+        'gl_balance_vivo_short': round(gl.balance_vivo_short,2),
     })
-
-
 
 
 @app.route('/datos_PControl') #Datos para el panel de control de index
@@ -121,6 +127,7 @@ def datos_PControl():
         fd = getattr(main_loop, f"{ticker}fd")  
 
         resultado[ticker] = {
+            'fd_type_pos': fd.type_pos,
             'fd_r0': fd.r0,
             'Cprecio': rt.current_price,
             'rt_posicion_porc': rt.posicion_porc,
@@ -143,11 +150,9 @@ async def detener_socket():
     rt = getattr(main_loop, f"{ticker}rt")
     fd = getattr(main_loop, f"{ticker}fd")  
     rt.detener_cm = True
-    await main_loop.detener_socket(ticker, ps, fd, rt, gl)
+    await main_loop.detener_socket(ticker, ps, fd, rt)
     main_loop.var_restart([ticker]) 
-    ps = getattr(main_loop, f"{ticker}ps")
-    ps.reset()
-
+    
     return Response(status=204) 
 
 
@@ -337,6 +342,58 @@ def deletedb():
     return jsonify({"ok": True})
 
 
+####################### LOG #####################################
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Handler que rota automáticamente
+handler = RotatingFileHandler('reg.log', maxBytes=500_000, backupCount=1)
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
+
+logger = logging.getLogger('reg')
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+
+@app.route('/log')
+def ver_log():
+    try:
+        with open('reg.log', 'r') as f:
+            lineas = f.readlines()
+        # Muestra solo las últimas 1000 líneas
+        contenido = ''.join(lineas[-1000:])
+    except FileNotFoundError:
+        contenido = "(Log vacío)"
+    return f'''<!DOCTYPE html>
+    <html><head>
+      <meta charset="UTF-8"><title>Log</title>
+      <meta http-equiv="refresh" content="10">
+      <style>
+        body {{ font-family: monospace; background:#111; color:#0f0; padding:20px; }}
+        pre  {{ font-size:12px; white-space:pre-wrap; word-break:break-all; }}
+        .btn {{ padding:8px 16px; background:#dc2626; color:#fff; border:none;
+                border-radius:6px; cursor:pointer; font-size:13px; text-decoration:none; }}
+      </style>
+    </head><body>
+      <a class="btn" href="/log/limpiar" onclick="return confirm('¿Limpiar log?')">🗑 Limpiar</a>
+      &nbsp;<small style="color:#666">Auto-refresh cada 10s · mostrando últimas 1000 líneas</small>
+      <pre>{contenido}</pre>
+    </body></html>'''
+
+@app.route('/log/limpiar')
+def limpiar_log():
+    open('reg.log', 'w').close()
+    return '<script>window.location="/log"</script>'
+
+
+#     # Al principio del archivo
+# import logging
+# logger = logging.getLogger('app')
+
+# # Reemplazos
+# print("Cargando datos")          →   logger.info("Cargando datos")
+# print(f"Error: {e}")             →   logger.error(f"Error: {e}")
+# print(f"Advertencia: {msg}")     →   logger.warning(f"Advertencia: {msg}")
 
 
 

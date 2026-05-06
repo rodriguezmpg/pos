@@ -57,7 +57,6 @@ class RealTime:
         self.secuencia = ''
 
         self.detener_cm = False #Detener soket manual
-        self.detener_ca = False #Detener soket automatico
 
         self.balance = 0.00
 
@@ -92,7 +91,7 @@ class RealTime:
         self.ALGO_pos = ''
         self.balance_vivo = 0.00
 
-        self.capital = 5000
+        
 
 
 class Globales:
@@ -100,18 +99,22 @@ class Globales:
         self.__init__()
 
     def __init__(self):
-        self.capital_base = 5000
-
-        self.capital_actual = 0.00
-
-        
+        self.capital = 5000
         self.usdt1r       = 0.0
         self.pnl_vivo     = 0.0
         self.balance      = 0.0
         self.sokets_activos      = 0   
         self.capital_arriesgado = 0
         self.disponible_operar = 0.00 
-        self.balance_vivo = 0.00             
+        self.balance_vivo = 0.00     
+        self.sokets_activos_long = 0  
+        self.sokets_activos_short = 0 
+        self.balance_long = 0.0
+        self.balance_short = 0.0
+        self.pnl_vivo_long = 0.0
+        self.pnl_vivo_short = 0.0
+        self.balance_vivo_long = 0.0
+        self.balance_vivo_short = 0.0
 
     def recalcular(self, symbol_list, main_loop):
         self.usdt1r        = 0.0
@@ -120,7 +123,15 @@ class Globales:
         self.sokets_activos       = 0
         self.capital_arriesgado = 0
         self.disponible_operar = 0.00
-        self.balance_vivo = 0.00 
+        self.balance_vivo = 0.00  
+        self.sokets_activos_long = 0  
+        self.sokets_activos_short = 0 
+        self.balance_long = 0.0
+        self.balance_short = 0.0 
+        self.pnl_vivo_long = 0.0
+        self.pnl_vivo_short = 0.0
+        self.balance_vivo_long = 0.0
+        self.balance_vivo_short = 0.0
 
         for symbol in symbol_list:
             ps = getattr(main_loop, f"{symbol}ps")
@@ -133,19 +144,27 @@ class Globales:
             
             if rt.BE_pos == -1:
                 self.usdt1r  += ps.USDT1r  
-                             
-            self.pnl_vivo += rt.pnl_vivo
-            self.balance += rt.balance
-            
-            self.sokets_activos += 1
 
-        self.capital_actual += self.capital_base 
-        self.capital_arriesgado = (self.usdt1r / self.capital_actual) * 100
-        self.disponible_operar = (self.capital_actual * 0.025) - self.usdt1r + self.balance
-        self.balance_vivo = self.pnl_vivo + self.balance
+            if fd.type_pos == 'LONG':
+                self.sokets_activos_long +=1
+                self.balance_long += rt.balance
+                self.pnl_vivo_long += rt.pnl_vivo
+
+            else:
+                self.sokets_activos_short += 1
+                self.balance_short += rt.balance
+                self.pnl_vivo_short += rt.pnl_vivo
+
+
+        self.capital_arriesgado = (self.usdt1r / self.capital) * 100
+        self.disponible_operar = (self.capital * 0.025) - self.usdt1r + self.balance        
+        self.sokets_activos = self.sokets_activos_long + self.sokets_activos_short
+        self.balance = self.balance_long + self.balance_short
+        self.pnl_vivo = self.pnl_vivo_long + self.pnl_vivo_short
+        self.balance_vivo_long = self.balance_long + self.pnl_vivo_long
+        self.balance_vivo_short = self.balance_short + self.pnl_vivo_short
+        self.balance_vivo = self.balance_vivo_long  + self.balance_vivo_short 
         
-
-
 
 gl = Globales() 
 

@@ -146,6 +146,16 @@
     </div>
   
   <script>
+    
+    document.querySelectorAll('input[name="USDT1r"], input[name="p2r"]').forEach(input => {
+    input.addEventListener('input', function() {
+        this.value = this.value.replace(',', '.');
+     });
+    });
+
+
+
+
     fetch('/getip')
       .then(res => res.json())
       .then(data => {
@@ -167,6 +177,7 @@
             <td>Ticker</td>
             <td>Estado</td>
             <td>Iniciar</td>
+            <td>Type</td>
             <td>PE</td>
             <td>PA</td>
             <td>%</td>
@@ -200,7 +211,8 @@ function generarFilasTabla(simbolos) {
         <tr>
             <td style="cursor: pointer;" onclick="window.open('/main?ticker=${simbolo}', '_blank')">${nombre}</td>
             <td><span id="${simbolo}_ps_estado_soket"></span></td>
-             <td><button type="button" onclick="enviarGeneral('${simbolo}', 'iniciar')">INICIAR</button></td>
+            <td><button type="button" onclick="enviarGeneral('${simbolo}', 'iniciar')">INICIAR</button></td>
+            <td><span id="${simbolo}_fd_type_pos"></span></td>
             <td><span id="${simbolo}_fd_r0"></span></td>
             <td><span id="${simbolo}_Cprecio"></span></td>
             <td><span id="${simbolo}_rt_posicion_porc"></span></td>
@@ -255,6 +267,8 @@ function actualizarPControl() {
 }
 setInterval(actualizarPControl, 1000);
 actualizarPControl();
+
+
 
           
 </script>
