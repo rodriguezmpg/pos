@@ -7,6 +7,9 @@ import sqlite3
 import os
 import time as _time
 from main_loop import iniciar_asyncio_orderupdate, symbol_list
+import logging
+from collections import deque
+logger = logging.getLogger('reg')
 
 import main_loop
 from core.orders import prueba_conexion
@@ -343,57 +346,39 @@ def deletedb():
 
 
 ####################### LOG #####################################
-import logging
-from logging.handlers import RotatingFileHandler
 
-# Handler que rota automáticamente
-handler = RotatingFileHandler('reg.log', maxBytes=500_000, backupCount=1)
-handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
+
+
+class DequeHandler(logging.Handler):
+    def __init__(self, maxlines=1000):
+        super().__init__()
+        self.buffer = deque(maxlen=maxlines)  # borra las antiguas automáticamente
+
+    def emit(self, record):
+        self.buffer.append(self.format(record))
+
+log_handler = DequeHandler(maxlines=1000)
+log_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+formatter.converter = _time.gmtime  # fuerza UTC
+log_handler.setFormatter(formatter)
 
 logger = logging.getLogger('reg')
 logger.setLevel(logging.INFO)
-logger.addHandler(handler)
+logger.addHandler(log_handler)
+
 
 @app.route('/log')
 def ver_log():
-    try:
-        with open('reg.log', 'r') as f:
-            lineas = f.readlines()
-        # Muestra solo las últimas 1000 líneas
-        contenido = ''.join(lineas[-1000:])
-    except FileNotFoundError:
-        contenido = "(Log vacío)"
-    return f'''<!DOCTYPE html>
-    <html><head>
-      <meta charset="UTF-8"><title>Log</title>
-      <meta http-equiv="refresh" content="10">
-      <style>
-        body {{ font-family: monospace; background:#111; color:#0f0; padding:20px; }}
-        pre  {{ font-size:12px; white-space:pre-wrap; word-break:break-all; }}
-        .btn {{ padding:8px 16px; background:#dc2626; color:#fff; border:none;
-                border-radius:6px; cursor:pointer; font-size:13px; text-decoration:none; }}
-      </style>
-    </head><body>
-      <a class="btn" href="/log/limpiar" onclick="return confirm('¿Limpiar log?')">🗑 Limpiar</a>
-      &nbsp;<small style="color:#666">Auto-refresh cada 10s · mostrando últimas 1000 líneas</small>
-      <pre>{contenido}</pre>
-    </body></html>'''
+    lineas = list(log_handler.buffer)
+    return render_template('log.html', lineas=lineas)
 
 @app.route('/log/limpiar')
 def limpiar_log():
-    open('reg.log', 'w').close()
+    log_handler.buffer.clear()
     return '<script>window.location="/log"</script>'
 
 
-#     # Al principio del archivo
-# import logging
-# logger = logging.getLogger('app')
-
-# # Reemplazos
-# print("Cargando datos")          →   logger.info("Cargando datos")
-# print(f"Error: {e}")             →   logger.error(f"Error: {e}")
-# print(f"Advertencia: {msg}")     →   logger.warning(f"Advertencia: {msg}")
 
 
 

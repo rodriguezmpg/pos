@@ -8,8 +8,11 @@ import requests
 from binance.client import Client
 from binance.enums import *
 from dotenv import load_dotenv
-
 from core.classes import OrderError
+import logging
+logger = logging.getLogger('reg')
+
+
 
 
 load_dotenv()
@@ -66,7 +69,7 @@ async def order_market(symbol: str, side: str, quantity: float, reduce: bool = F
             positions = client.futures_position_information(symbol=symbol)
 
             if any(float(p.get('positionAmt', 0)) != 0 for p in positions):
-                print(f"[order_market] Ya hay posición abierta para {symbol}, se omite la orden.")
+                logger.info(f"[order_market] Ya hay posición abierta para {symbol}, se omite la orden.")
                 return None
         order = client.futures_create_order(
             symbol=symbol,
@@ -77,9 +80,10 @@ async def order_market(symbol: str, side: str, quantity: float, reduce: bool = F
             newOrderRespType='FULL'
         )
         id_order = order['orderId']
+        logger.info(f"Orden enviada para {symbol} - ID: {id_order} - Qty = {quantity}")
         return id_order
     except Exception as e:
-        print(f"Error al enviar la orden para {symbol}: {e} - Qty = {quantity}")
+        logger.info(f"Error al enviar la orden para {symbol}: {e} - Qty = {quantity}")
         raise OrderError(f"Error en la orden para {symbol}: {e}")
 
 
@@ -102,9 +106,10 @@ async def order_tp_market(symbol: str, side: str, quantity: float, trigger_price
         }
         result = await asyncio.to_thread(_algo_order_post, params)
         id_order = result.get("algoId")
+        logger.info(f"Orden TP Market enviada  para {symbol} - ID: {id_order} - Qty = {quantity}")
         return id_order
     except Exception as e:
-        print(f"Error TP_MARKET {symbol}: {e}")
+        logger.info(f"Error TP_MARKET {symbol}: {e}")
         raise OrderError(f"Error TP_MARKET {symbol}: {e}")
 
 
@@ -125,9 +130,10 @@ async def order_sl_stop_market(symbol: str, side: str, stop_price: float):
         }
         result = await asyncio.to_thread(_algo_order_post, params)
         id_order = result.get("algoId")
+        logger.info(f"Orden SL Market enviada  para {symbol} - ID: {id_order}")
         return id_order
     except Exception as e:
-        print(f"Error SL STOP_MARKET {symbol}: {e}")
+        logger.info(f"Error SL STOP_MARKET {symbol}: {e}")
         raise OrderError(f"Error SL STOP_MARKET {symbol}: {e}")
 
 
@@ -150,7 +156,7 @@ async def get_order_info(symbol, id_order, max_attempts=10, wait_seconds=2):
             return PE_order, pnl, fee, total_qty
         else:
             await asyncio.sleep(wait_seconds)
-    raise Exception(f"No se encontró la orden {id_order} después de {max_attempts} intentos.")
+    raise Exception(f"[GET ORDER INFO] - No se encontró la orden {id_order} después de {max_attempts} intentos.")
 
 
 
@@ -171,7 +177,7 @@ async def close_total(symbol):
         await asyncio.sleep(0.4)
 
     if amt == 0:
-        print(f"[close_total] No hay posición abierta para {symbol}")
+        logger.info(f"[close_total] No hay posición abierta para {symbol}")
         return None
 
     qty = abs(amt)
@@ -184,9 +190,10 @@ async def close_total(symbol):
     if rem != 0:
         qty2 = abs(rem)
         side2 = SIDE_BUY if rem < 0 else SIDE_SELL
-        print(f"[close_total] Quedó remanente {rem} en {symbol}, reintentando cierre...")
+        logger.info(f"[close_total] Quedó remanente {rem} en {symbol}, reintentando cierre...")
         id_order = await order_market(symbol, side=side2, quantity=qty2, reduce=True)
 
+    logger.info(f"[CLOSE TOTAL] {symbol} - ID Order: {id_order}")
     return id_order
 
 def cancel_algo_order(symbol: str, algo_id: int):
@@ -212,17 +219,17 @@ def cancel_algo_order(symbol: str, algo_id: int):
         )
 
         if resp.status_code in (400, 404):
-            print(f"[INFO] AlgoId={algo_id} ya no existe, nada que cancelar.")
+            logger.info(f"[INFO] AlgoId={algo_id} ya no existe, nada que cancelar.")
             return None
 
         if resp.status_code != 200:
             raise Exception(f"Error cancelando algoId {algo_id}: {resp.text}")
 
-        print(f"[OK] Cancelada algoId={algo_id}")
+        logger.info(f"[OK] Cancelada algoId={algo_id}")
         return resp.json()
 
     except Exception as e:
-        print(f"[ERROR] cancel_algo_order: {e}")
+        logger.info(f"[ERROR] cancel_algo_order: {e}")
         return None
 
 
@@ -257,7 +264,7 @@ def prueba_conexion():
         _ultima_prueba = ahora
         return True
     except Exception as e:
-        print(f"No se pudo conectar a Binance. Motivo: {e}")
+        logger.info(f"No se pudo conectar a Binance. Motivo: {e}")
         return False
 
 

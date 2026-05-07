@@ -4,6 +4,9 @@ from core.dbfunc import write_db, write_analisis_db, DB_PATH
 from core.orders import close_total, order_market, get_order_info, order_tp_market, order_sl_stop_market, cancel_algo_order
 from core.classes import gl
 
+import logging
+logger = logging.getLogger('reg')
+
 async def Grid(symbol, ps, fd, rt):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -166,7 +169,6 @@ async def r1_r2(symbol, ps, fd, rt):
     write_db(Data_db, symbol)
 
 async def r_ts(symbol, ps, fd, rt):
-    print("R_TS")
     if fd.type_pos == 'LONG':
         rt.r_1 = round(rt.r_ts - fd.dist_1r, fd.dec_precio)
         rt.r_ts += round(fd.dist_1r, fd.dec_precio)
