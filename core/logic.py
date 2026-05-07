@@ -50,6 +50,7 @@ async def Grid(symbol, ps, fd, rt):
         fd.control = False
         USDTmin = round((fd.Qty_min * (fd.r0 - fd.r_1))*4,2)
         fd.mensaje = f'Cantidad minima no aceptada minimo: {USDTmin}'
+        logger.info(f"[{symbol}][QTY MIN] Minimo no aceptado")
 
     if fd.control:
         #id_order_r0 = await order_market(symbol, side_open, 0.20, False) #teast rapido
@@ -104,21 +105,7 @@ async def Grid(symbol, ps, fd, rt):
             ]
         ]
         write_db(Data_db, symbol)
-        
-        
-
-
-        # if fd.type_pos == 'SHORT': #TEST RAPIDO
-        #     fd.r_1 = round(fd.r0 * 1.0005, fd.dec_precio)
-        #     fd.r1 = round(fd.r0 * 0.9995, fd.dec_precio)
-        #     fd.r2 = round(fd.r0 * 0.9990, fd.dec_precio)
-        # else:
-        #     fd.r_1 = round(fd.r0 * 0.9995, fd.dec_precio)
-        #     fd.r1 = round(fd.r0 * 1.0005, fd.dec_precio)
-        #     fd.r2 = round(fd.r0 * 1.0010, fd.dec_precio)       
-        # rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, 0.10, fd.r1)
-        # rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, 0.05, fd.r2)
-        # rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, fd.r_1)
+    
 
         rt.id_order_r1 = await order_tp_market(symbol, fd.side_close, rt.Qty_r1, fd.r1)
         rt.id_order_r2 = await order_tp_market(symbol, fd.side_close, rt.Qty_r2, fd.r2)
@@ -127,6 +114,7 @@ async def Grid(symbol, ps, fd, rt):
 
 async def r1_r2(symbol, ps, fd, rt):
     if rt.r1_active:
+        logger.info(f"[{symbol}][R1] Activo")
         rt.ALGO_pos = 'R1'
         cancel_algo_order(symbol, rt.id_order_r_1)
         rt.r_1 = fd.r0
@@ -134,7 +122,8 @@ async def r1_r2(symbol, ps, fd, rt):
         rt.BE_pos +=1 #vale 0
         rt.r1_active = False
         rt.Qty_r1 = 0
-    elif rt.r2_active:       
+    elif rt.r2_active:  
+        logger.info(f"[{symbol}][R2] Activo")     
         rt.ALGO_pos = 'R2'
         cancel_algo_order(symbol, rt.id_order_r_1)  
         rt.r_1 = fd.r1    
@@ -169,6 +158,7 @@ async def r1_r2(symbol, ps, fd, rt):
     write_db(Data_db, symbol)
 
 async def r_ts(symbol, ps, fd, rt):
+    
     if fd.type_pos == 'LONG':
         rt.r_1 = round(rt.r_ts - fd.dist_1r, fd.dec_precio)
         rt.r_ts += round(fd.dist_1r, fd.dec_precio)
@@ -180,10 +170,14 @@ async def r_ts(symbol, ps, fd, rt):
     rt.BE_pos += 1
     rt.ALGO_pos = 'TS'
 
+    logger.info(f"[{symbol}][RTS] Activo - BE_pos: {rt.BE_pos}")
+
     cancel_algo_order(symbol, rt.id_order_r_1)
     rt.id_order_r_1 = await order_sl_stop_market(symbol, fd.side_close, rt.r_1)
 
 async def r_1(symbol, ps, fd, rt):
+    
+    logger.info(f"[{symbol}][R_1] Activado")
 
     if rt.detener_cm: #detener soket
         id_order = cancel_algo_order(symbol, rt.id_order_r_1)     

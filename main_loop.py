@@ -5,6 +5,7 @@ import json
 import traceback
 import os
 
+
 from core.orders import get_listen_key, keepalive_listen_key
 from core.classes import DataPost, FixedData, RealTime, OrderError, gl
 from core.logic import Grid, Steps, r_1
@@ -65,9 +66,8 @@ async def calculos(symbol, datasocket):
         fd.dec_precio , fd.dec_qty = obtenerdecimales(symbol)
         fd.Qty_min = round(Qty_min(symbol, rt.current_price), fd.dec_qty)
         rt.fechayhora = datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")
-        await Grid(symbol, ps, fd, rt)
-        
-        logger.info(f"Grillas listas para {symbol} - {rt.fechayhora}")
+        await Grid(symbol, ps, fd, rt)        
+        logger.info(f"[{symbol}] - Inicio terminado")
         
         
 
@@ -108,7 +108,7 @@ async def start_socket(symbol):
     reinicio[symbol] = True
     if TESTNET: url = f"wss://stream.binancefuture.com/ws/{symbol}@ticker"
     else: url = f"wss://fstream.binance.com/market/ws/{symbol}@ticker"
-    logger.info(f"[SOCKET] WebSocket iniciado para: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+    logger.info(f"[{symbol}][SOCKET] WebSocket iniciado correctamente")
     while True:
         try:
             async with websockets.connect(url) as websocket:
@@ -119,24 +119,22 @@ async def start_socket(symbol):
                         payload = data
                         await calculos(symbol, payload) 
                     except asyncio.TimeoutError:
-                        logger.info(f"[SOCKET] Sin mensajes hace 10s, reconectando: {symbol}")
+                        logger.info(f"[{symbol}][SOCKET] Sin mensajes hace 10s, reconectando...")
                         break
                     except asyncio.CancelledError:
-                        logger.info(f"[SOCKET] Cancelado: {symbol} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+                        logger.info(f"[{symbol}][SOCKET] Cancelado ")
                         return
                     except OrderError as oe:
-                        logger.info(f"[ERROR] en la orden: {oe} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+                        logger.info(f"[{symbol}][SOKET] ERROR en el envio orden al socket: {oe} - ")
                         return
                     except Exception as e:
-                        logger.info(f"[CONEXION ERROR SOKET] en WebSocket de {symbol}: {e} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")  
+                        logger.info(f"[{symbol}][CONEXION ERROR SOCKET] {e} ")  
                         break  # Si hay error en el recv, sal de este while para reconectar
         except Exception as e:
-            logger.info(f"[CONEXION ERROR] Conexión WebSocket de {symbol}: {e} - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+            logger.info(f"[{symbol}][ERROR CONEXION WEBSOCKET] {e} ")
 
-        logger.info(f"[SOCKET] Reintentando conexión para: {symbol} en 5 segundos... - {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
-        await asyncio.sleep(5)  # Espera 5 segundos antes de intentar reconectar.
-
-
+        logger.info(f"[{symbol}][CONEXION ERROR SOCKET]Perdida de conexion, reintentando en en 5 segundos...")
+        await asyncio.sleep(5)  #
 
 
 
@@ -206,17 +204,20 @@ async def start_user_data_socket_order_update():
                             except Exception as ka_error:
                                 logger.info(f"[GENERAL SOCKET] Keepalive falló, reconectando: {ka_error}")
                                 break  # Fuerza reconexión con nuevo listenKey
-                        # Si no es hora de keepalive, simplemente sigue esperando
+
 
         except Exception as e:
-            logger.info(f"[USER SOCKET ERROR] Reintentando... {e}")
+            logger.info(f"[SOCKET GENERAL ERROR] Reintentando... {e}")
             await asyncio.sleep(10)
 
 
     
 async def detener_socket(symbol, ps, fd, rt):
     task = active_tasks.get(symbol)
-    if fd.control and rt.detener_cm: await r_1(symbol, ps, fd, rt)
+    if fd.control and rt.detener_cm:
+        logger.info(f"[DETENER SOCKET] Detencion Manual")
+        await r_1(symbol, ps, fd, rt)
+    else: logger.info(f"[DETENER SOCKET] Detencion Automatica")
     if task:        
         task.cancel()
         del active_tasks[symbol]
